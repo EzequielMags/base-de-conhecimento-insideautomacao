@@ -14,12 +14,14 @@ interface SolutionCardProps {
 }
 
 export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardProps) => {
+  const firstImage = card.files?.find(f => f.type.startsWith('image/'));
+  
   return (
     <Card className="card-hover gradient-card overflow-hidden group cursor-pointer" onClick={() => onView(card)}>
-      {card.images.length > 0 && (
+      {firstImage && (
         <div className="relative h-48 overflow-hidden">
           <img
-            src={card.images[0]}
+            src={firstImage.url}
             alt={card.title}
             className="w-full h-full object-cover transition-transform group-hover:scale-110"
           />

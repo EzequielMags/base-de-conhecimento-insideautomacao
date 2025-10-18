@@ -19,6 +19,7 @@ export type Database = {
           category: Database["public"]["Enums"]["card_category"]
           created_at: string | null
           description: string
+          files: Json | null
           id: string
           images: string[] | null
           title: string
@@ -29,6 +30,7 @@ export type Database = {
           category: Database["public"]["Enums"]["card_category"]
           created_at?: string | null
           description: string
+          files?: Json | null
           id?: string
           images?: string[] | null
           title: string
@@ -39,6 +41,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["card_category"]
           created_at?: string | null
           description?: string
+          files?: Json | null
           id?: string
           images?: string[] | null
           title?: string

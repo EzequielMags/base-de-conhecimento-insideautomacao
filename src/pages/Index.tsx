@@ -91,7 +91,14 @@ const Index = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCards(data || []);
+      
+      // Parse files JSON to CardFile[]
+      const parsedCards = (data || []).map(card => ({
+        ...card,
+        files: (card.files || []) as any as Card['files']
+      }));
+      
+      setCards(parsedCards as Card[]);
     } catch (error) {
       console.error("Erro ao carregar cards:", error);
       toast({
@@ -118,17 +125,22 @@ const Index = () => {
       if (editingCard) {
         const { error } = await supabase
           .from('cards')
-          .update(cardData)
+          .update({
+            title: cardData.title,
+            description: cardData.description,
+            category: cardData.category,
+            files: cardData.files as any
+          })
           .eq('id', editingCard.id);
 
         if (error) throw error;
       } else {
         const newCard = {
-          ...cardData,
-          user_id: user.id,
           title: cardData.title!,
           description: cardData.description!,
           category: cardData.category!,
+          files: (cardData.files || []) as any,
+          user_id: user.id,
         };
         
         const { error } = await supabase

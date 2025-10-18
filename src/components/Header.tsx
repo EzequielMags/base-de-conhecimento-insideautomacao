@@ -1,0 +1,95 @@
+import { Moon, Sun, Plus, LogOut, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+
+interface HeaderProps {
+  onNewCard: () => void;
+}
+
+export const Header = ({ onNewCard }: HeaderProps) => {
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Logout realizado",
+      description: "Até logo!"
+    });
+    navigate("/auth");
+  };
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <div className="container flex h-16 items-center justify-between px-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary">
+            <span className="text-xl font-bold text-white">F</span>
+          </div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            FixCards
+          </h1>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              <Button onClick={onNewCard} className="gap-2">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Novo Card</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={handleLogout}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sair</span>
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => navigate("/auth")}
+              className="gap-2"
+            >
+              <LogIn className="h-4 w-4" />
+              Entrar
+            </Button>
+          )}
+          
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleTheme}
+            className="rounded-full"
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+};

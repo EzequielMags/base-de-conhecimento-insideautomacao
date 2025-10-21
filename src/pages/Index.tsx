@@ -94,10 +94,11 @@ const Index = () => {
 
       if (error) throw error;
       
-      // Parse files JSON to CardFile[]
+      // Parse files and videos JSON to proper types
       const parsedCards = (data || []).map(card => ({
         ...card,
-        files: (card.files || []) as any as Card['files']
+        files: (card.files || []) as any as Card['files'],
+        videos: (card.videos || []) as any as Card['videos']
       }));
       
       setCards(parsedCards as Card[]);
@@ -131,7 +132,8 @@ const Index = () => {
             title: cardData.title,
             description: cardData.description,
             category: cardData.category,
-            files: cardData.files as any
+            files: cardData.files as any,
+            videos: cardData.videos as any
           })
           .eq('id', editingCard.id);
 
@@ -142,6 +144,7 @@ const Index = () => {
           description: cardData.description!,
           category: cardData.category!,
           files: (cardData.files || []) as any,
+          videos: (cardData.videos || []) as any,
           user_id: user.id,
         };
         

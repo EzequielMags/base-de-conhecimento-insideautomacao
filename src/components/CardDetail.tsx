@@ -8,6 +8,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download } from "lucide-react";
 import { downloadFile, formatFileSize, getFileIcon } from "@/utils/fileUpload";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { ImageLightbox } from "./ImageLightbox";
+import { VideoPlayer } from "./VideoPlayer";
+import { motion } from "framer-motion";
 
 interface CardDetailProps {
   card: CardType | null;
@@ -17,6 +21,7 @@ interface CardDetailProps {
 
 export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   const { toast } = useToast();
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   if (!card) return null;
 
@@ -37,55 +42,90 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   };
 
   const imageFiles = card.files?.filter(f => f.type.startsWith('image/')) || [];
-  const otherFiles = card.files?.filter(f => !f.type.startsWith('image/')) || [];
+  const videoFiles = card.files?.filter(f => f.type.startsWith('video/')) || [];
+  const otherFiles = card.files?.filter(f => !f.type.startsWith('image/') && !f.type.startsWith('video/')) || [];
+  const embeddedVideos = card.videos || [];
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] animate-scale-in">
-        <DialogHeader>
-          <div className="flex items-center gap-2 mb-2">
-            <Badge>{card.category}</Badge>
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(card.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-            </span>
-          </div>
-          <DialogTitle className="text-2xl">{card.title}</DialogTitle>
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[calc(90vh-10rem)]">
-          <div className="space-y-6 pr-4">
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <h3 className="text-lg font-semibold mb-2">Solução</h3>
-              <p className="whitespace-pre-wrap text-muted-foreground">
-                {card.description}
-              </p>
-            </div>
-
-            {imageFiles.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold">Imagens</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {imageFiles.map((file, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={file.url}
-                        alt={file.name}
-                        className="w-full h-64 object-cover rounded-lg"
-                      />
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity gap-2"
-                        onClick={() => handleDownload(file.url, file.name)}
-                      >
-                        <Download className="h-4 w-4" />
-                        Baixar
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-3xl max-h-[90vh]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge>{card.category}</Badge>
+                <span className="text-xs text-muted-foreground">
+                  {format(new Date(card.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </span>
               </div>
-            )}
+              <DialogTitle className="text-2xl">{card.title}</DialogTitle>
+            </DialogHeader>
+
+            <ScrollArea className="max-h-[calc(90vh-10rem)]">
+              <div className="space-y-6 pr-4">
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <h3 className="text-lg font-semibold mb-2">Solução</h3>
+                  <p className="whitespace-pre-wrap text-muted-foreground">
+                    {card.description}
+                  </p>
+                </div>
+
+                {(embeddedVideos.length > 0 || videoFiles.length > 0) && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold">Vídeos</h3>
+                    <div className="space-y-4">
+                      {embeddedVideos.map((video, index) => (
+                        <VideoPlayer key={`embed-${index}`} video={video} />
+                      ))}
+                      {videoFiles.map((file, index) => (
+                        <VideoPlayer 
+                          key={`upload-${index}`} 
+                          video={{ type: 'upload', url: file.url, name: file.name }} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {imageFiles.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold">Imagens</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {imageFiles.map((file, index) => (
+                        <motion.div 
+                          key={index} 
+                          className="relative group cursor-zoom-in"
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                          onClick={() => setLightboxImage(file.url)}
+                        >
+                          <img
+                            src={file.url}
+                            alt={file.name}
+                            className="w-full h-64 object-cover rounded-lg"
+                          />
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity gap-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(file.url, file.name);
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                            Baixar
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
             {otherFiles.length > 0 && (
               <div className="space-y-3">
@@ -117,14 +157,18 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
               </div>
             )}
 
-            {imageFiles.length === 0 && otherFiles.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhum arquivo anexado a este card</p>
+                {imageFiles.length === 0 && otherFiles.length === 0 && videoFiles.length === 0 && embeddedVideos.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>Nenhum arquivo anexado a este card</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+            </ScrollArea>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
+
+      <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
+    </>
   );
 };

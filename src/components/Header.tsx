@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
+import { motion } from "framer-motion";
 
 interface HeaderProps {
   onNewCard: () => void;
@@ -39,11 +40,20 @@ export const Header = ({ onNewCard }: HeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+    <motion.header 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60"
+    >
       <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center">
+        <motion.div 
+          className="flex items-center"
+          whileHover={{ scale: 1.05 }}
+          transition={{ duration: 0.2 }}
+        >
           <img src={logo} alt="Inside Automação" className="h-12 object-contain" />
-        </div>
+        </motion.div>
         
         <div className="flex items-center gap-2">
           {user ? (
@@ -86,6 +96,6 @@ export const Header = ({ onNewCard }: HeaderProps) => {
           </Button>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 };

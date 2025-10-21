@@ -1,10 +1,13 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Edit, Trash2, Eye, Play } from "lucide-react";
 import { Card as CardType } from "@/types/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { ImageLightbox } from "./ImageLightbox";
 
 interface SolutionCardProps {
   card: CardType;
@@ -14,20 +17,53 @@ interface SolutionCardProps {
 }
 
 export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardProps) => {
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const firstImage = card.files?.find(f => f.type.startsWith('image/'));
+  const firstVideo = card.videos?.[0];
   
   return (
-    <Card className="card-hover gradient-card overflow-hidden group cursor-pointer animate-scale-in" onClick={() => onView(card)}>
-      {firstImage && (
-        <div className="relative h-48 overflow-hidden">
-          <img
-            src={firstImage.url}
-            alt={card.title}
-            className="w-full h-full object-cover transition-transform group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        </div>
-      )}
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ y: -4 }}
+      >
+        <Card className="card-hover gradient-card overflow-hidden group cursor-pointer" onClick={() => onView(card)}>
+          {firstVideo && (
+            <div className="relative h-48 overflow-hidden bg-black">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Play className="h-12 w-12 text-white/80 group-hover:text-white transition-colors" />
+              </div>
+              {firstVideo.thumbnail && (
+                <img
+                  src={firstVideo.thumbnail}
+                  alt={card.title}
+                  className="w-full h-full object-cover opacity-50"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            </div>
+          )}
+          
+          {!firstVideo && firstImage && (
+            <div 
+              className="relative h-48 overflow-hidden cursor-zoom-in"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxImage(firstImage.url);
+              }}
+            >
+              <motion.img
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+                src={firstImage.url}
+                alt={card.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            </div>
+          )}
       
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
@@ -82,6 +118,10 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
           <Trash2 className="h-4 w-4" />
         </Button>
       </CardFooter>
-    </Card>
+        </Card>
+      </motion.div>
+      
+      <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
+    </>
   );
 };

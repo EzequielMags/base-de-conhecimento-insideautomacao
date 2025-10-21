@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
-import { CategoryFilter, Category } from "@/components/CategoryFilter";
+import { Category } from "@/components/CategoryFilter";
 import { CardGrid } from "@/components/CardGrid";
 import { CardForm } from "@/components/CardForm";
 import { CardDetail } from "@/components/CardDetail";
 import { AIAssistant } from "@/components/AIAssistant";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card } from "@/types/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
 
 const Index = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -215,57 +217,68 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onNewCard={handleNewCard} />
-
-      <main className="container px-4 py-8 space-y-8">
-        <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Base de Conhecimento Colaborativa
-            </h2>
-            <p className="text-muted-foreground">
-              Encontre soluções compartilhadas pela equipe
-            </p>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar 
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+        
+        <div className="flex-1 flex flex-col">
+          <Header onNewCard={handleNewCard} />
+          
+          <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">
+            <SidebarTrigger className="hover:bg-accent transition-colors">
+              <Menu className="h-5 w-5" />
+            </SidebarTrigger>
+            <span className="text-sm text-muted-foreground">Menu de Categorias</span>
           </div>
 
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
-          
-          <CategoryFilter
-            selected={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
+          <main className="flex-1 container px-4 py-8 space-y-8 animate-fade-in-up">
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">
+                  Base de Conhecimento Colaborativa
+                </h2>
+                <p className="text-muted-foreground">
+                  Encontre soluções compartilhadas pela equipe
+                </p>
+              </div>
+
+              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            </div>
+
+            <CardGrid
+              cards={filteredCards}
+              onEdit={handleEdit}
+              onDelete={handleDeleteCard}
+              onView={handleView}
+            />
+          </main>
         </div>
 
-        <CardGrid
-          cards={filteredCards}
-          onEdit={handleEdit}
-          onDelete={handleDeleteCard}
-          onView={handleView}
+        <CardForm
+          open={formOpen}
+          onClose={() => {
+            setFormOpen(false);
+            setEditingCard(null);
+          }}
+          onSave={handleSaveCard}
+          editCard={editingCard}
         />
-      </main>
 
-      <CardForm
-        open={formOpen}
-        onClose={() => {
-          setFormOpen(false);
-          setEditingCard(null);
-        }}
-        onSave={handleSaveCard}
-        editCard={editingCard}
-      />
+        <CardDetail
+          card={viewingCard}
+          open={detailOpen}
+          onClose={() => {
+            setDetailOpen(false);
+            setViewingCard(null);
+          }}
+        />
 
-      <CardDetail
-        card={viewingCard}
-        open={detailOpen}
-        onClose={() => {
-          setDetailOpen(false);
-          setViewingCard(null);
-        }}
-      />
-
-      <AIAssistant />
-    </div>
+        <AIAssistant />
+      </div>
+    </SidebarProvider>
   );
 };
 

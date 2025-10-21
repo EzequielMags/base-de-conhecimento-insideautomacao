@@ -41,7 +41,7 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
+      <DialogContent className="max-w-3xl max-h-[90vh] animate-scale-in">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
             <Badge>{card.category}</Badge>

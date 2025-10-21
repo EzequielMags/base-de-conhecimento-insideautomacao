@@ -7,7 +7,9 @@ const categories = [
   "Sat",
   "NFCE",
   "Dados Fiscais",
-  "Sistema"
+  "Sistema",
+  "Tablet",
+  "Extras"
 ] as const;
 
 export type Category = typeof categories[number];

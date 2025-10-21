@@ -17,7 +17,7 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
   const firstImage = card.files?.find(f => f.type.startsWith('image/'));
   
   return (
-    <Card className="card-hover gradient-card overflow-hidden group cursor-pointer" onClick={() => onView(card)}>
+    <Card className="card-hover gradient-card overflow-hidden group cursor-pointer animate-scale-in" onClick={() => onView(card)}>
       {firstImage && (
         <div className="relative h-48 overflow-hidden">
           <img

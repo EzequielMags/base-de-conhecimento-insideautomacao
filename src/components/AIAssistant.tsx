@@ -55,7 +55,7 @@ export const AIAssistant = () => {
       <SheetTrigger asChild>
         <Button
           size="lg"
-          className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg z-40"
+          className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg z-40 hover:scale-110 transition-all animate-scale-in"
         >
           <Bot className="h-6 w-6" />
         </Button>

@@ -65,6 +65,8 @@ export type Database = {
         | "NFCE"
         | "Dados Fiscais"
         | "Sistema"
+        | "Tablet"
+        | "Extras"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -199,6 +201,8 @@ export const Constants = {
         "NFCE",
         "Dados Fiscais",
         "Sistema",
+        "Tablet",
+        "Extras",
       ],
     },
   },

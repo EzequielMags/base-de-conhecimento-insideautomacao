@@ -4,7 +4,9 @@ export type CardCategory =
   | "Sat" 
   | "NFCE" 
   | "Dados Fiscais" 
-  | "Sistema";
+  | "Sistema"
+  | "Tablet"
+  | "Extras";
 
 export interface CardFile {
   name: string;

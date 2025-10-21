@@ -41,11 +41,8 @@ export const Header = ({ onNewCard }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="Inside Automação" className="h-10 w-10 object-contain" />
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Inside Automação
-          </h1>
+        <div className="flex items-center">
+          <img src={logo} alt="Inside Automação" className="h-12 object-contain" />
         </div>
         
         <div className="flex items-center gap-2">

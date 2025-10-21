@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import logo from "@/assets/logo.png";
 
 interface HeaderProps {
   onNewCard: () => void;
@@ -41,11 +42,9 @@ export const Header = ({ onNewCard }: HeaderProps) => {
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary">
-            <span className="text-xl font-bold text-white">F</span>
-          </div>
+          <img src={logo} alt="Inside Automação" className="h-10 w-10 object-contain" />
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            FixCards
+            Inside Automação
           </h1>
         </div>
         

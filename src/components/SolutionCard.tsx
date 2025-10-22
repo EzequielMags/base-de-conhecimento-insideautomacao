@@ -29,9 +29,12 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
         transition={{ duration: 0.3 }}
         whileHover={{ y: -4 }}
       >
-        <Card className="card-hover gradient-card overflow-hidden group cursor-pointer" onClick={() => onView(card)}>
+        <Card className="card-hover gradient-card overflow-hidden group">
           {firstVideo && (
-            <div className="relative h-48 overflow-hidden bg-black">
+            <div 
+              className="relative h-48 overflow-hidden bg-black cursor-pointer"
+              onClick={() => onView(card)}
+            >
               <div className="absolute inset-0 flex items-center justify-center">
                 <Play className="h-12 w-12 text-white/80 group-hover:text-white transition-colors" />
               </div>
@@ -65,7 +68,7 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
             </div>
           )}
       
-      <CardHeader className="space-y-2">
+      <CardHeader className="space-y-2 cursor-pointer" onClick={() => onView(card)}>
         <div className="flex items-start justify-between gap-2">
           <Badge variant="secondary" className="mb-2">
             {card.category}
@@ -77,7 +80,7 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
         </CardDescription>
       </CardHeader>
       
-      <CardContent>
+      <CardContent className="cursor-pointer" onClick={() => onView(card)}>
         <p className="text-xs text-muted-foreground">
           Criado em {format(new Date(card.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
         </p>

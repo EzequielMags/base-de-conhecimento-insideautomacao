@@ -6,8 +6,6 @@ import { Card as CardType } from "@/types/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { ImageLightbox } from "./ImageLightbox";
 
 interface SolutionCardProps {
   card: CardType;
@@ -17,12 +15,10 @@ interface SolutionCardProps {
 }
 
 export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardProps) => {
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const firstImage = card.files?.find(f => f.type.startsWith('image/'));
   const firstVideo = card.videos?.[0];
   
   return (
-    <>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -51,11 +47,8 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
           
           {!firstVideo && firstImage && (
             <div 
-              className="relative h-48 overflow-hidden cursor-zoom-in"
-              onClick={(e) => {
-                e.stopPropagation();
-                setLightboxImage(firstImage.url);
-              }}
+              className="relative h-48 overflow-hidden cursor-pointer"
+              onClick={() => onView(card)}
             >
               <motion.img
                 whileHover={{ scale: 1.05 }}
@@ -123,8 +116,5 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
       </CardFooter>
         </Card>
       </motion.div>
-      
-      <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
-    </>
   );
 };

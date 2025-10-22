@@ -9,7 +9,6 @@ import { Download } from "lucide-react";
 import { downloadFile, formatFileSize, getFileIcon } from "@/utils/fileUpload";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { ImageLightbox } from "./ImageLightbox";
 import { VideoPlayer } from "./VideoPlayer";
 import { VideoLightbox } from "./VideoLightbox";
 import { motion } from "framer-motion";
@@ -22,7 +21,6 @@ interface CardDetailProps {
 
 export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   const { toast } = useToast();
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [lightboxVideo, setLightboxVideo] = useState<{ type: 'upload' | 'embed'; url: string; name?: string } | null>(null);
 
   if (!card) return null;
@@ -114,10 +112,9 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
                       {imageFiles.map((file, index) => (
                         <motion.div 
                           key={index} 
-                          className="relative group cursor-zoom-in"
+                          className="relative group"
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
-                          onClick={() => setLightboxImage(file.url)}
                         >
                           <img
                             src={file.url}
@@ -128,10 +125,7 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
                             size="sm"
                             variant="secondary"
                             className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity gap-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownload(file.url, file.name);
-                            }}
+                            onClick={() => handleDownload(file.url, file.name)}
                           >
                             <Download className="h-4 w-4" />
                             Baixar
@@ -183,7 +177,6 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
         </DialogContent>
       </Dialog>
 
-      <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
       <VideoLightbox video={lightboxVideo} onClose={() => setLightboxVideo(null)} />
     </>
   );

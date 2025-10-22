@@ -12,9 +12,11 @@ interface SolutionCardProps {
   onEdit: (card: CardType) => void;
   onDelete: (id: string) => void;
   onView: (card: CardType) => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
-export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardProps) => {
+export const SolutionCard = ({ card, onEdit, onDelete, onView, canEdit, canDelete }: SolutionCardProps) => {
   const firstImage = card.files?.find(f => f.type.startsWith('image/'));
   const firstVideo = card.videos?.[0];
   
@@ -92,27 +94,31 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
           <Eye className="h-4 w-4" />
           Ver
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(card);
-          }}
-          className="gap-2"
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(card.id);
-          }}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {canEdit && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(card);
+            }}
+            className="gap-2"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
+        {canDelete && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(card.id);
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </CardFooter>
         </Card>
       </motion.div>

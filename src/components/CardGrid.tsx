@@ -6,9 +6,12 @@ interface CardGridProps {
   onEdit: (card: CardType) => void;
   onDelete: (id: string) => void;
   onView: (card: CardType) => void;
+  currentUserId: string;
+  canEdit: (cardUserId: string, currentUserId: string) => boolean;
+  canDelete: (cardUserId: string, currentUserId: string) => boolean;
 }
 
-export const CardGrid = ({ cards, onEdit, onDelete, onView }: CardGridProps) => {
+export const CardGrid = ({ cards, onEdit, onDelete, onView, currentUserId, canEdit, canDelete }: CardGridProps) => {
   if (cards.length === 0) {
     return (
       <div className="text-center py-16">
@@ -28,6 +31,8 @@ export const CardGrid = ({ cards, onEdit, onDelete, onView }: CardGridProps) => 
           onEdit={onEdit}
           onDelete={onDelete}
           onView={onView}
+          canEdit={canEdit(card.user_id, currentUserId)}
+          canDelete={canDelete(card.user_id, currentUserId)}
         />
       ))}
     </div>

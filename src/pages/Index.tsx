@@ -11,6 +11,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card } from "@/types/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Loader2, Menu } from "lucide-react";
 
 const Index = () => {
@@ -25,6 +26,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+  const { userRole, canCreate, canEdit, canDelete, loading: roleLoading } = useUserRole();
 
   // Verificar autenticação
   useEffect(() => {
@@ -207,11 +209,21 @@ const Index = () => {
       });
       return;
     }
+    
+    if (!canCreate) {
+      toast({
+        title: "Sem permissão",
+        description: "Você não tem permissão para criar cards.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setEditingCard(null);
     setFormOpen(true);
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -228,7 +240,7 @@ const Index = () => {
         />
         
         <div className="flex-1 flex flex-col">
-          <Header onNewCard={handleNewCard} />
+          <Header onNewCard={handleNewCard} canCreate={canCreate} />
           
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">
             <SidebarTrigger className="hover:bg-accent transition-colors">
@@ -256,6 +268,9 @@ const Index = () => {
               onEdit={handleEdit}
               onDelete={handleDeleteCard}
               onView={handleView}
+              currentUserId={user?.id || ''}
+              canEdit={canEdit}
+              canDelete={canDelete}
             />
           </main>
         </div>

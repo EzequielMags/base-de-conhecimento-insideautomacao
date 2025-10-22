@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { ImageLightbox } from "./ImageLightbox";
 import { VideoPlayer } from "./VideoPlayer";
+import { VideoLightbox } from "./VideoLightbox";
 import { motion } from "framer-motion";
 
 interface CardDetailProps {
@@ -22,6 +23,7 @@ interface CardDetailProps {
 export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   const { toast } = useToast();
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxVideo, setLightboxVideo] = useState<{ type: 'upload' | 'embed'; url: string; name?: string } | null>(null);
 
   if (!card) return null;
 
@@ -49,14 +51,15 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh]">
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
+            className="flex flex-col max-h-[90vh]"
           >
-            <DialogHeader>
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
               <div className="flex items-center gap-2 mb-2">
                 <Badge>{card.category}</Badge>
                 <span className="text-xs text-muted-foreground">
@@ -66,11 +69,11 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
               <DialogTitle className="text-2xl">{card.title}</DialogTitle>
             </DialogHeader>
 
-            <ScrollArea className="max-h-[calc(90vh-10rem)]">
-              <div className="space-y-6 pr-4">
+            <ScrollArea className="flex-1 px-6 py-4">
+              <div className="space-y-6">
                 <div className="prose prose-sm max-w-none dark:prose-invert">
                   <h3 className="text-lg font-semibold mb-2">Solução</h3>
-                  <p className="whitespace-pre-wrap text-muted-foreground">
+                  <p className="whitespace-pre-wrap text-muted-foreground break-words">
                     {card.description}
                   </p>
                 </div>
@@ -80,14 +83,26 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
                     <h3 className="text-lg font-semibold">Vídeos</h3>
                     <div className="space-y-4">
                       {embeddedVideos.map((video, index) => (
-                        <VideoPlayer key={`embed-${index}`} video={video} />
+                        <div 
+                          key={`embed-${index}`} 
+                          className="cursor-pointer"
+                          onClick={() => setLightboxVideo(video)}
+                        >
+                          <VideoPlayer video={video} />
+                        </div>
                       ))}
-                      {videoFiles.map((file, index) => (
-                        <VideoPlayer 
-                          key={`upload-${index}`} 
-                          video={{ type: 'upload', url: file.url, name: file.name }} 
-                        />
-                      ))}
+                      {videoFiles.map((file, index) => {
+                        const videoData = { type: 'upload' as const, url: file.url, name: file.name };
+                        return (
+                          <div 
+                            key={`upload-${index}`} 
+                            className="cursor-pointer"
+                            onClick={() => setLightboxVideo(videoData)}
+                          >
+                            <VideoPlayer video={videoData} />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -169,6 +184,7 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
       </Dialog>
 
       <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
+      <VideoLightbox video={lightboxVideo} onClose={() => setLightboxVideo(null)} />
     </>
   );
 };

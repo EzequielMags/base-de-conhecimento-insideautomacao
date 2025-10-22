@@ -1,14 +1,19 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
+import { VideoPlayer } from "./VideoPlayer";
 
-interface ImageLightboxProps {
-  imageUrl: string | null;
+interface VideoLightboxProps {
+  video: {
+    type: 'upload' | 'embed';
+    url: string;
+    name?: string;
+  } | null;
   onClose: () => void;
 }
 
-export const ImageLightbox = ({ imageUrl, onClose }: ImageLightboxProps) => {
-  if (!imageUrl) return null;
+export const VideoLightbox = ({ video, onClose }: VideoLightboxProps) => {
+  if (!video) return null;
 
   return (
     <AnimatePresence>
@@ -17,7 +22,7 @@ export const ImageLightbox = ({ imageUrl, onClose }: ImageLightboxProps) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-0"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-8"
         onClick={onClose}
       >
         <Button
@@ -29,16 +34,16 @@ export const ImageLightbox = ({ imageUrl, onClose }: ImageLightboxProps) => {
           <X className="h-8 w-8" />
         </Button>
         
-        <motion.img
+        <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          src={imageUrl}
-          alt="Visualização ampliada"
-          className="max-h-screen max-w-screen object-contain"
+          className="w-full max-w-6xl"
           onClick={(e) => e.stopPropagation()}
-        />
+        >
+          <VideoPlayer video={video} className="max-h-[90vh]" />
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );

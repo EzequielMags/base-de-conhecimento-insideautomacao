@@ -65,14 +65,14 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
             </div>
           )}
       
-      <CardHeader>
+      <CardHeader className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <Badge variant="secondary" className="mb-2">
             {card.category}
           </Badge>
         </div>
-        <CardTitle className="line-clamp-2">{card.title}</CardTitle>
-        <CardDescription className="line-clamp-3">
+        <CardTitle className="line-clamp-2 break-words">{card.title}</CardTitle>
+        <CardDescription className="line-clamp-3 break-words">
           {card.description}
         </CardDescription>
       </CardHeader>

@@ -44,6 +44,17 @@ const Auth = () => {
 
         navigate("/");
       } else {
+        // Validar domínio do email antes de criar conta
+        if (!email.endsWith("@insideautomacao.com.br")) {
+          toast({
+            title: "Erro de validação",
+            description: "Apenas emails do domínio @insideautomacao.com.br podem criar contas.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,

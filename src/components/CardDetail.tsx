@@ -5,13 +5,14 @@ import { Card as CardType } from "@/types/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download } from "lucide-react";
+import { Download, User } from "lucide-react";
 import { downloadFile, formatFileSize, getFileIcon } from "@/utils/fileUpload";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { VideoPlayer } from "./VideoPlayer";
 import { VideoLightbox } from "./VideoLightbox";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CardDetailProps {
   card: CardType | null;
@@ -22,6 +23,25 @@ interface CardDetailProps {
 export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   const { toast } = useToast();
   const [lightboxVideo, setLightboxVideo] = useState<{ type: 'upload' | 'embed'; url: string; name?: string } | null>(null);
+  const [creatorName, setCreatorName] = useState<string>("");
+
+  useEffect(() => {
+    const fetchCreatorName = async () => {
+      if (card?.user_id) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("id", card.user_id)
+          .single();
+        
+        if (data) {
+          setCreatorName(data.name);
+        }
+      }
+    };
+    
+    fetchCreatorName();
+  }, [card?.user_id]);
 
   if (!card) return null;
 
@@ -58,11 +78,17 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
             className="flex flex-col max-h-[90vh]"
           >
             <DialogHeader className="px-6 pt-6 pb-4 border-b">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <Badge>{card.category}</Badge>
                 <span className="text-xs text-muted-foreground">
                   {format(new Date(card.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </span>
+                {creatorName && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <User className="h-3 w-3" />
+                    <span>Criado por {creatorName}</span>
+                  </div>
+                )}
               </div>
               <DialogTitle className="text-2xl">{card.title}</DialogTitle>
             </DialogHeader>

@@ -1,11 +1,13 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Eye, Play } from "lucide-react";
+import { Edit, Trash2, Eye, Play, User } from "lucide-react";
 import { Card as CardType } from "@/types/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SolutionCardProps {
   card: CardType;
@@ -17,6 +19,25 @@ interface SolutionCardProps {
 export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardProps) => {
   const firstImage = card.files?.find(f => f.type.startsWith('image/'));
   const firstVideo = card.videos?.[0];
+  const [creatorName, setCreatorName] = useState<string>("");
+
+  useEffect(() => {
+    const fetchCreatorName = async () => {
+      if (card.user_id) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("id", card.user_id)
+          .single();
+        
+        if (data) {
+          setCreatorName(data.name);
+        }
+      }
+    };
+    
+    fetchCreatorName();
+  }, [card.user_id]);
   
   return (
       <motion.div
@@ -74,9 +95,17 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
       </CardHeader>
       
       <CardContent className="cursor-pointer" onClick={() => onView(card)}>
-        <p className="text-xs text-muted-foreground">
-          Criado em {format(new Date(card.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-        </p>
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">
+            Criado em {format(new Date(card.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+          </p>
+          {creatorName && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <User className="h-3 w-3" />
+              <span>por {creatorName}</span>
+            </div>
+          )}
+        </div>
       </CardContent>
       
       <CardFooter className="gap-2">

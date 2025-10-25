@@ -27,7 +27,16 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
 
   useEffect(() => {
     const fetchCreatorName = async () => {
-      if (card?.user_id) {
+      if (!card) return;
+      
+      // Se tem author_name customizado, usar ele
+      if ((card as any).author_name) {
+        setCreatorName((card as any).author_name);
+        return;
+      }
+      
+      // Senão, buscar o nome do perfil
+      if (card.user_id) {
         const { data } = await supabase
           .from("profiles")
           .select("name")
@@ -41,7 +50,7 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
     };
     
     fetchCreatorName();
-  }, [card?.user_id]);
+  }, [card]);
 
   if (!card) return null;
 

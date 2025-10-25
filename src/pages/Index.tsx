@@ -133,7 +133,8 @@ const Index = () => {
             description: cardData.description,
             category: cardData.category,
             files: cardData.files as any,
-            videos: cardData.videos as any
+            videos: cardData.videos as any,
+            author_name: (cardData as any).author_name
           })
           .eq('id', editingCard.id);
 
@@ -146,6 +147,7 @@ const Index = () => {
           files: (cardData.files || []) as any,
           videos: (cardData.videos || []) as any,
           user_id: user.id,
+          author_name: (cardData as any).author_name
         };
         
         const { error } = await supabase
@@ -189,8 +191,17 @@ const Index = () => {
   };
 
   const handleEdit = (card: Card) => {
-    setEditingCard(card);
-    setFormOpen(true);
+    const password = prompt("Digite a senha para editar:");
+    if (password === "78592121") {
+      setEditingCard(card);
+      setFormOpen(true);
+    } else if (password !== null) {
+      toast({
+        title: "Senha incorreta",
+        description: "A senha digitada está incorreta.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleView = (card: Card) => {

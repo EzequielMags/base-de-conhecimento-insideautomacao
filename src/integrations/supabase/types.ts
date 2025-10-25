@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       cards: {
         Row: {
+          author_name: string | null
           category: Database["public"]["Enums"]["card_category"]
           created_at: string | null
           description: string
@@ -28,6 +29,7 @@ export type Database = {
           videos: Json | null
         }
         Insert: {
+          author_name?: string | null
           category: Database["public"]["Enums"]["card_category"]
           created_at?: string | null
           description: string
@@ -40,6 +42,7 @@ export type Database = {
           videos?: Json | null
         }
         Update: {
+          author_name?: string | null
           category?: Database["public"]["Enums"]["card_category"]
           created_at?: string | null
           description?: string

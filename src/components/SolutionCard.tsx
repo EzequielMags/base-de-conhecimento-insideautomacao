@@ -23,6 +23,13 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
 
   useEffect(() => {
     const fetchCreatorName = async () => {
+      // Se tem author_name customizado, usar ele
+      if ((card as any).author_name) {
+        setCreatorName((card as any).author_name);
+        return;
+      }
+      
+      // Senão, buscar o nome do perfil
       if (card.user_id) {
         const { data } = await supabase
           .from("profiles")
@@ -37,7 +44,7 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
     };
     
     fetchCreatorName();
-  }, [card.user_id]);
+  }, [card]);
   
   return (
       <motion.div

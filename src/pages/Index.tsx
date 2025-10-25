@@ -254,9 +254,6 @@ const Index = () => {
                 <h2 className="text-3xl font-bold tracking-tight">
                   Base de Conhecimento Colaborativa
                 </h2>
-                <p className="text-muted-foreground">
-                  Encontre soluções compartilhadas pela equipe
-                </p>
               </div>
 
               <SearchBar value={searchQuery} onChange={setSearchQuery} />

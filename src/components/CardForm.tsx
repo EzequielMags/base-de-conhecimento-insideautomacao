@@ -38,51 +38,23 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
   const [videoUrl, setVideoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [useCustomAuthor, setUseCustomAuthor] = useState(false);
-  const [customAuthorName, setCustomAuthorName] = useState("");
-  const [profileName, setProfileName] = useState("");
+  const [authorName, setAuthorName] = useState("");
 
   useEffect(() => {
-    const loadUserProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single();
-        
-        if (data) {
-          setProfileName(data.name);
-        }
-      }
-    };
-
-    loadUserProfile();
-
     if (editCard) {
       setTitle(editCard.title);
       setDescription(editCard.description);
       setCategory(editCard.category);
       setFiles(editCard.files || []);
       setVideos(editCard.videos || []);
-      
-      // Verificar se tem author_name customizado
-      if ((editCard as any).author_name) {
-        setUseCustomAuthor(true);
-        setCustomAuthorName((editCard as any).author_name);
-      } else {
-        setUseCustomAuthor(false);
-        setCustomAuthorName("");
-      }
+      setAuthorName((editCard as any).author_name || "");
     } else {
       setTitle("");
       setDescription("");
       setCategory("Impressora");
       setFiles([]);
       setVideos([]);
-      setUseCustomAuthor(false);
-      setCustomAuthorName("");
+      setAuthorName("");
     }
   }, [editCard, open]);
 
@@ -165,8 +137,6 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
 
     setLoading(true);
     try {
-      const authorName = useCustomAuthor ? customAuthorName : null;
-      
       await onSave({
         title,
         description,
@@ -247,43 +217,13 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
             </div>
 
             <div className="space-y-2">
-              <Label>Autor do Card</Label>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id="useProfile"
-                    checked={!useCustomAuthor}
-                    onChange={() => setUseCustomAuthor(false)}
-                    className="cursor-pointer"
-                  />
-                  <Label htmlFor="useProfile" className="cursor-pointer font-normal">
-                    Usar meu nome ({profileName || "carregando..."})
-                  </Label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id="useCustom"
-                    checked={useCustomAuthor}
-                    onChange={() => setUseCustomAuthor(true)}
-                    className="cursor-pointer"
-                  />
-                  <Label htmlFor="useCustom" className="cursor-pointer font-normal">
-                    Usar nome personalizado
-                  </Label>
-                </div>
-
-                {useCustomAuthor && (
-                  <Input
-                    value={customAuthorName}
-                    onChange={(e) => setCustomAuthorName(e.target.value)}
-                    placeholder="Digite o nome do autor"
-                    className="mt-2"
-                  />
-                )}
-              </div>
+              <Label htmlFor="author">Autor do Card</Label>
+              <Input
+                id="author"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                placeholder="Digite o nome do autor"
+              />
             </div>
 
             <div className="space-y-2">

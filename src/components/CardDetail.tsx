@@ -10,7 +10,6 @@ import { downloadFile, formatFileSize, getFileIcon } from "@/utils/fileUpload";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { VideoPlayer } from "./VideoPlayer";
-import { VideoLightbox } from "./VideoLightbox";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,7 +21,6 @@ interface CardDetailProps {
 
 export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   const { toast } = useToast();
-  const [lightboxVideo, setLightboxVideo] = useState<{ type: 'upload' | 'embed'; url: string; name?: string } | null>(null);
   const [creatorName, setCreatorName] = useState<string>("");
 
   useEffect(() => {
@@ -116,22 +114,14 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
                     <h3 className="text-lg font-semibold">Vídeos</h3>
                     <div className="space-y-4">
                       {embeddedVideos.map((video, index) => (
-                        <div 
-                          key={`embed-${index}`} 
-                          className="cursor-pointer"
-                          onClick={() => setLightboxVideo(video)}
-                        >
+                        <div key={`embed-${index}`}>
                           <VideoPlayer video={video} />
                         </div>
                       ))}
                       {videoFiles.map((file, index) => {
                         const videoData = { type: 'upload' as const, url: file.url, name: file.name };
                         return (
-                          <div 
-                            key={`upload-${index}`} 
-                            className="cursor-pointer"
-                            onClick={() => setLightboxVideo(videoData)}
-                          >
+                          <div key={`upload-${index}`}>
                             <VideoPlayer video={videoData} />
                           </div>
                         );
@@ -211,8 +201,6 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
           </motion.div>
         </DialogContent>
       </Dialog>
-
-      <VideoLightbox video={lightboxVideo} onClose={() => setLightboxVideo(null)} />
     </>
   );
 };

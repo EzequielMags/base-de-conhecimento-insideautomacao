@@ -295,7 +295,7 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
                   </span>
                   <input
                     type="file"
-                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.bak"
+                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.bak,.bat"
                     multiple
                     onChange={handleFileUpload}
                     className="hidden"

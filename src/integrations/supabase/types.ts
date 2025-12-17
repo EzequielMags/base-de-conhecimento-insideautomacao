@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           author_name: string | null
           category: Database["public"]["Enums"]["card_category"]
+          cover_image: string | null
           created_at: string | null
           description: string
           files: Json | null
@@ -31,6 +32,7 @@ export type Database = {
         Insert: {
           author_name?: string | null
           category: Database["public"]["Enums"]["card_category"]
+          cover_image?: string | null
           created_at?: string | null
           description: string
           files?: Json | null
@@ -44,6 +46,7 @@ export type Database = {
         Update: {
           author_name?: string | null
           category?: Database["public"]["Enums"]["card_category"]
+          cover_image?: string | null
           created_at?: string | null
           description?: string
           files?: Json | null

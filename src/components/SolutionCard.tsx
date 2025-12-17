@@ -19,6 +19,7 @@ interface SolutionCardProps {
 export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardProps) => {
   const firstImage = card.files?.find(f => f.type.startsWith('image/'));
   const firstVideo = card.videos?.[0];
+  const coverImage = (card as any).cover_image;
   const [creatorName, setCreatorName] = useState<string>("");
 
   useEffect(() => {
@@ -45,6 +46,9 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
     
     fetchCreatorName();
   }, [card]);
+
+  // Determinar qual imagem mostrar: capa personalizada > primeira imagem > nenhuma
+  const displayImage = coverImage || firstImage?.url;
   
   return (
       <motion.div
@@ -54,6 +58,23 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
         whileHover={{ y: -4 }}
       >
         <Card className="card-hover gradient-card overflow-hidden group">
+          {/* Prioridade: 1. Capa personalizada, 2. Vídeo, 3. Primeira imagem */}
+          {coverImage && !firstVideo && (
+            <div 
+              className="relative h-48 overflow-hidden cursor-pointer"
+              onClick={() => onView(card)}
+            >
+              <motion.img
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+                src={coverImage}
+                alt={card.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            </div>
+          )}
+          
           {firstVideo && (
             <div 
               className="relative h-48 overflow-hidden bg-black cursor-pointer"
@@ -62,9 +83,9 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
               <div className="absolute inset-0 flex items-center justify-center">
                 <Play className="h-12 w-12 text-white/80 group-hover:text-white transition-colors" />
               </div>
-              {firstVideo.thumbnail && (
+              {(coverImage || firstVideo.thumbnail) && (
                 <img
-                  src={firstVideo.thumbnail}
+                  src={coverImage || firstVideo.thumbnail}
                   alt={card.title}
                   className="w-full h-full object-cover opacity-50"
                 />
@@ -73,7 +94,7 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView }: SolutionCardPro
             </div>
           )}
           
-          {!firstVideo && firstImage && (
+          {!firstVideo && !coverImage && firstImage && (
             <div 
               className="relative h-48 overflow-hidden cursor-pointer"
               onClick={() => onView(card)}

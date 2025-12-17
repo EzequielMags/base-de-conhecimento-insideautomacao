@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card as CardType, CardCategory, CardFile, CardVideo } from "@/types/card";
-import { Upload, X, FileIcon, Link as LinkIcon, Video } from "lucide-react";
+import { Upload, X, FileIcon, Link as LinkIcon, Video, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile, formatFileSize, getFileIcon } from "@/utils/fileUpload";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,8 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [authorName, setAuthorName] = useState("");
+  const [coverImage, setCoverImage] = useState<string>("");
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   useEffect(() => {
     if (editCard) {
@@ -48,6 +50,7 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
       setFiles(editCard.files || []);
       setVideos(editCard.videos || []);
       setAuthorName((editCard as any).author_name || "");
+      setCoverImage((editCard as any).cover_image || "");
     } else {
       setTitle("");
       setDescription("");
@@ -55,6 +58,7 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
       setFiles([]);
       setVideos([]);
       setAuthorName("");
+      setCoverImage("");
     }
   }, [editCard, open]);
 
@@ -92,6 +96,59 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erro",
+        description: "A capa deve ser uma imagem",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingCover(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const uploadedFile = await uploadFile(file, user.id);
+      setCoverImage(uploadedFile.url);
+      
+      toast({
+        title: "Capa adicionada!",
+        description: "A imagem de capa foi definida com sucesso."
+      });
+    } catch (error) {
+      console.error("Erro ao fazer upload da capa:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar a imagem de capa.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const selectCoverFromFiles = (url: string) => {
+    setCoverImage(url);
+    toast({
+      title: "Capa selecionada!",
+      description: "A imagem foi definida como capa do card."
+    });
+  };
+
+  const removeCover = () => {
+    setCoverImage("");
+    toast({
+      title: "Capa removida",
+      description: "A imagem de capa foi removida."
+    });
   };
 
   const addVideoUrl = () => {
@@ -144,7 +201,8 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
         files,
         videos,
         images: [], // Mantemos compatibilidade
-        author_name: authorName
+        author_name: authorName,
+        cover_image: coverImage
       } as any);
       
       toast({
@@ -224,6 +282,64 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
                 onChange={(e) => setAuthorName(e.target.value)}
                 placeholder="Digite o nome do autor"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Capa do Card (miniatura)</Label>
+              <div className="border-2 border-dashed rounded-lg p-4">
+                {coverImage ? (
+                  <div className="relative">
+                    <img
+                      src={coverImage}
+                      alt="Capa do card"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeCover}
+                      className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center gap-2 cursor-pointer">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground text-center">
+                      {uploadingCover ? "Enviando capa..." : "Clique para adicionar uma capa"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Imagem que aparecerá como miniatura do card
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverUpload}
+                      className="hidden"
+                      disabled={uploadingCover}
+                    />
+                  </label>
+                )}
+                
+                {/* Opção para selecionar dos arquivos já adicionados */}
+                {files.filter(f => f.type.startsWith('image/')).length > 0 && !coverImage && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-xs text-muted-foreground mb-2">Ou selecione dos arquivos já adicionados:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {files.filter(f => f.type.startsWith('image/')).map((file, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => selectCoverFromFiles(file.url)}
+                          className="h-16 w-16 rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-colors"
+                        >
+                          <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">

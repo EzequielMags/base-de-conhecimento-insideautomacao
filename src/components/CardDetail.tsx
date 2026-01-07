@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { VideoPlayer } from "./VideoPlayer";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { ImageGallery } from "./ImageGallery";
 
 interface CardDetailProps {
   card: CardType | null;
@@ -22,6 +23,8 @@ interface CardDetailProps {
 export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   const { toast } = useToast();
   const [creatorName, setCreatorName] = useState<string>("");
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     const fetchCreatorName = async () => {
@@ -137,20 +140,32 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
                       {imageFiles.map((file, index) => (
                         <motion.div 
                           key={index} 
-                          className="relative group"
+                          className="relative group cursor-pointer"
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
+                          onClick={() => {
+                            setGalleryIndex(index);
+                            setGalleryOpen(true);
+                          }}
                         >
                           <img
                             src={file.url}
                             alt={file.name}
                             className="w-full h-64 object-cover rounded-lg"
                           />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center">
+                            <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium">
+                              Clique para ampliar
+                            </span>
+                          </div>
                           <Button
                             size="sm"
                             variant="secondary"
                             className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity gap-2"
-                            onClick={() => handleDownload(file.url, file.name)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(file.url, file.name);
+                            }}
                           >
                             <Download className="h-4 w-4" />
                             Baixar
@@ -201,6 +216,14 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
           </motion.div>
         </DialogContent>
       </Dialog>
+
+      {/* Image Gallery Lightbox */}
+      <ImageGallery
+        images={imageFiles.map(f => f.url)}
+        initialIndex={galleryIndex}
+        isOpen={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
+      />
     </>
   );
 };

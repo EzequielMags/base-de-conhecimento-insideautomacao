@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
@@ -6,8 +6,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
   type CarouselApi,
 } from "./ui/carousel";
 
@@ -79,6 +77,16 @@ export const ImageGallery = ({
     };
   }, [isOpen]);
 
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    api?.scrollPrev();
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    api?.scrollNext();
+  };
+
   if (!isOpen || images.length === 0) return null;
 
   const isSingleImage = images.length === 1;
@@ -97,22 +105,47 @@ export const ImageGallery = ({
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-4 right-4 z-[101] text-white hover:bg-white/20 h-12 w-12"
-          onClick={onClose}
+          className="absolute top-4 right-4 z-[102] text-white hover:bg-white/20 h-12 w-12"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
         >
           <X className="h-8 w-8" />
         </Button>
 
         {/* Image counter */}
         {!isSingleImage && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[101] text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[102] text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
             {current + 1} / {images.length}
           </div>
         )}
 
+        {/* Navigation arrows - positioned outside carousel */}
+        {!isSingleImage && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-[102] h-14 w-14 bg-black/50 hover:bg-black/70 text-white border-none rounded-full"
+              onClick={handlePrev}
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-[102] h-14 w-14 bg-black/50 hover:bg-black/70 text-white border-none rounded-full"
+              onClick={handleNext}
+            >
+              <ChevronRight className="h-8 w-8" />
+            </Button>
+          </>
+        )}
+
         {/* Gallery content */}
         <div
-          className="w-full h-full flex items-center justify-center px-4 md:px-16"
+          className="w-full h-full flex items-center justify-center px-16 md:px-24"
           onClick={(e) => e.stopPropagation()}
         >
           {isSingleImage ? (
@@ -149,23 +182,13 @@ export const ImageGallery = ({
                   </CarouselItem>
                 ))}
               </CarouselContent>
-
-              {/* Navigation arrows */}
-              <CarouselPrevious
-                className="left-2 md:left-4 h-12 w-12 bg-black/50 hover:bg-black/70 text-white border-none"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <CarouselNext
-                className="right-2 md:right-4 h-12 w-12 bg-black/50 hover:bg-black/70 text-white border-none"
-                onClick={(e) => e.stopPropagation()}
-              />
             </Carousel>
           )}
         </div>
 
         {/* Dot indicators for mobile */}
         {!isSingleImage && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[101] flex gap-2">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[102] flex gap-2">
             {images.map((_, index) => (
               <button
                 key={index}

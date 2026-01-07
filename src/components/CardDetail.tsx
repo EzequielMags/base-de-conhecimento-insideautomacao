@@ -26,6 +26,14 @@ export const CardDetail = ({ card, open, onClose }: CardDetailProps) => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
 
+  // Reset gallery state when card changes or dialog closes
+  useEffect(() => {
+    if (!open) {
+      setGalleryOpen(false);
+      setGalleryIndex(0);
+    }
+  }, [open]);
+
   useEffect(() => {
     const fetchCreatorName = async () => {
       if (!card) return;

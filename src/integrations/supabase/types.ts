@@ -77,6 +77,75 @@ export type Database = {
         }
         Relationships: []
       }
+      store_bank_files: {
+        Row: {
+          created_at: string
+          custom_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          original_name: string
+          thumbnail_url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          original_name: string
+          thumbnail_url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          original_name?: string
+          thumbnail_url?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      technical_pdfs: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number | null
+          file_url: string
+          id: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

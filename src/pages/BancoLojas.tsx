@@ -93,25 +93,40 @@ const BancoLojas = () => {
     }
     setUploading(true);
     try {
-      // upload main file
-      const ext = selectedFile.name.split(".").pop();
-      const path = `${user.id}/${Date.now()}-${selectedFile.name}`;
+      // Sanitiza o nome do arquivo (storage rejeita espaços/acentos/caracteres especiais no path)
+      const sanitize = (n: string) =>
+        n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+         .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+      const ext = (selectedFile.name.split(".").pop() || "").toLowerCase();
+      const safeName = sanitize(selectedFile.name);
+      const path = `${user.id}/${Date.now()}-${safeName}`;
+
+      console.log("[BancoLojas] uploading", { path, size: selectedFile.size, ext });
+
       const { error: upErr } = await supabase.storage.from("store-bank").upload(path, selectedFile, {
         cacheControl: "3600",
         upsert: false,
       });
-      if (upErr) throw upErr;
+      if (upErr) {
+        console.error("[BancoLojas] storage upload error", upErr);
+        throw upErr;
+      }
       const { data: { publicUrl } } = supabase.storage.from("store-bank").getPublicUrl(path);
 
       // upload thumbnail if any
       let thumbUrl: string | null = null;
       if (thumbnailFile) {
-        const tPath = `${user.id}/thumbs/${Date.now()}-${thumbnailFile.name}`;
+        const tSafe = sanitize(thumbnailFile.name);
+        const tPath = `${user.id}/thumbs/${Date.now()}-${tSafe}`;
         const { error: tErr } = await supabase.storage.from("store-bank").upload(tPath, thumbnailFile, {
           cacheControl: "3600",
           upsert: false,
         });
-        if (tErr) throw tErr;
+        if (tErr) {
+          console.error("[BancoLojas] thumbnail upload error", tErr);
+          throw tErr;
+        }
         thumbUrl = supabase.storage.from("store-bank").getPublicUrl(tPath).data.publicUrl;
       }
 
@@ -125,14 +140,24 @@ const BancoLojas = () => {
         file_type: ext,
         file_size: selectedFile.size,
       });
-      if (insErr) throw insErr;
+      if (insErr) {
+        console.error("[BancoLojas] db insert error", insErr);
+        throw insErr;
+      }
 
       toast({ title: "Upload concluído!", description: "Arquivo adicionado." });
       setDialogOpen(false);
-      load();
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Erro", description: "Falha ao enviar arquivo.", variant: "destructive" });
+      setSelectedFile(null);
+      setThumbnailFile(null);
+      setCustomName("");
+      await load();
+    } catch (err: any) {
+      console.error("[BancoLojas] submit failed", err);
+      toast({
+        title: "Erro no upload",
+        description: err?.message || "Falha ao enviar arquivo.",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }

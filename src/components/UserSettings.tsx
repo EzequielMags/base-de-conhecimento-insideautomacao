@@ -59,35 +59,24 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
   const loadUsers = async () => {
     setUsersLoading(true);
     try {
-      const { data: profiles, error: pErr } = await supabase
-        .from("profiles")
-        .select("id, name, email")
-        .order("name", { ascending: true });
-      if (pErr) throw pErr;
+      const { data, error } = await supabase.rpc("admin_list_users");
+      if (error) throw error;
 
-      const { data: roles, error: rErr } = await supabase
-        .from("user_roles")
-        .select("user_id, role");
-      if (rErr) throw rErr;
-
-      const roleMap = new Map<string, AppRole>();
-      (roles || []).forEach((r: any) => {
-        // priorizar admin > user > read
-        const existing = roleMap.get(r.user_id);
-        const order: Record<AppRole, number> = { admin: 1, user: 2, read: 3 };
-        if (!existing || order[r.role as AppRole] < order[existing]) {
-          roleMap.set(r.user_id, r.role as AppRole);
-        }
-      });
-
-      const merged: ManagedUser[] = (profiles || []).map((p: any) => {
-        const role = roleMap.get(p.id) ?? "read";
-        return { id: p.id, name: p.name, email: p.email, role, pendingRole: role };
-      });
+      const merged: ManagedUser[] = (data || []).map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role as AppRole,
+        pendingRole: u.role as AppRole,
+      }));
       setUsers(merged);
     } catch (e: any) {
-      console.error(e);
-      toast({ title: "Erro", description: "Não foi possível carregar os usuários.", variant: "destructive" });
+      console.error("admin_list_users error", e);
+      toast({
+        title: "Erro",
+        description: e.message || "Não foi possível carregar os usuários.",
+        variant: "destructive",
+      });
     } finally {
       setUsersLoading(false);
     }
@@ -97,22 +86,16 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
     if (u.pendingRole === u.role) return;
     setSavingUserId(u.id);
     try {
-      // Remover roles atuais e inserir o novo (mantém único role por usuário aqui)
-      const { error: delErr } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", u.id);
-      if (delErr) throw delErr;
-
-      const { error: insErr } = await supabase
-        .from("user_roles")
-        .insert({ user_id: u.id, role: u.pendingRole });
-      if (insErr) throw insErr;
+      const { error } = await supabase.rpc("admin_set_user_role", {
+        _user_id: u.id,
+        _role: u.pendingRole,
+      });
+      if (error) throw error;
 
       setUsers(prev => prev.map(x => x.id === u.id ? { ...x, role: u.pendingRole } : x));
       toast({ title: "Permissão atualizada", description: `${u.email || u.name} agora é ${roleLabel(u.pendingRole)}.` });
     } catch (e: any) {
-      console.error(e);
+      console.error("admin_set_user_role error", e);
       toast({ title: "Erro", description: e.message || "Não foi possível atualizar.", variant: "destructive" });
     } finally {
       setSavingUserId(null);

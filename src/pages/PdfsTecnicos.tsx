@@ -117,7 +117,7 @@ const PdfsTecnicos = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar selectedCategory="Todas" onSelectCategory={() => {}} />
+        <AppSidebar />
 
         <div className="flex-1 flex flex-col">
           <Header onNewCard={() => navigate("/")} />

@@ -11,9 +11,10 @@ import { UserSettings } from "./UserSettings";
 
 interface HeaderProps {
   onNewCard: () => void;
+  canCreate?: boolean;
 }
 
-export const Header = ({ onNewCard }: HeaderProps) => {
+export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -61,10 +62,12 @@ export const Header = ({ onNewCard }: HeaderProps) => {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Button onClick={onNewCard} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Novo Card</span>
-                </Button>
+                {canCreate && (
+                  <Button onClick={onNewCard} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Novo Card</span>
+                  </Button>
+                )}
                 
                 <Button
                   variant="outline"

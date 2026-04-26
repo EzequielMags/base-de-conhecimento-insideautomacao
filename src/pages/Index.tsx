@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
 import { Category } from "@/components/CategoryFilter";
+import { CategoryFilterDropdown } from "@/components/CategoryFilterDropdown";
 import { CardGrid } from "@/components/CardGrid";
 import { CardForm } from "@/components/CardForm";
 import { CardDetail } from "@/components/CardDetail";
@@ -12,6 +13,7 @@ import { Card } from "@/types/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Menu } from "lucide-react";
+import { useUserRole } from "@/hooks/use-user-role";
 
 const Index = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -23,40 +25,17 @@ const Index = () => {
   const [viewingCard, setViewingCard] = useState<Card | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+  const { user, isAdmin, isEditor, isVisitor, canCreate } = useUserRole();
 
-  // Verificar autenticação
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Carregar cards
   useEffect(() => {
     loadCards();
 
-    // Realtime subscription
     const channel = supabase
       .channel('cards-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'cards'
-        },
-        () => {
-          loadCards();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, () => {
+        loadCards();
+      })
       .subscribe();
 
     return () => {
@@ -64,7 +43,6 @@ const Index = () => {
     };
   }, []);
 
-  // Filtrar cards
   useEffect(() => {
     let filtered = cards;
 
@@ -93,14 +71,13 @@ const Index = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Parse files and videos JSON to proper types
+
       const parsedCards = (data || []).map(card => ({
         ...card,
         files: (card.files || []) as any as Card['files'],
         videos: (card.videos || []) as any as Card['videos']
       }));
-      
+
       setCards(parsedCards as Card[]);
     } catch (error) {
       console.error("Erro ao carregar cards:", error);
@@ -116,16 +93,18 @@ const Index = () => {
 
   const handleSaveCard = async (cardData: Partial<Card>) => {
     if (!user) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para criar cards.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro", description: "Você precisa estar logado.", variant: "destructive" });
       return;
     }
 
     try {
       if (editingCard) {
+        // Editor só pode editar próprios cards
+        if (!isAdmin && editingCard.user_id !== user.id) {
+          toast({ title: "Sem permissão", description: "Você só pode editar cards criados por você.", variant: "destructive" });
+          return;
+        }
+
         const { error } = await supabase
           .from('cards')
           .update({
@@ -134,12 +113,18 @@ const Index = () => {
             category: cardData.category,
             files: cardData.files as any,
             videos: cardData.videos as any,
-            author_name: (cardData as any).author_name
+            author_name: (cardData as any).author_name,
+            cover_image: (cardData as any).cover_image,
           })
           .eq('id', editingCard.id);
 
         if (error) throw error;
       } else {
+        if (!canCreate) {
+          toast({ title: "Sem permissão", description: "Você não tem permissão para criar um Card.", variant: "destructive" });
+          return;
+        }
+
         const newCard = {
           title: cardData.title!,
           description: cardData.description!,
@@ -147,13 +132,11 @@ const Index = () => {
           files: (cardData.files || []) as any,
           videos: (cardData.videos || []) as any,
           user_id: user.id,
-          author_name: (cardData as any).author_name
+          author_name: (cardData as any).author_name,
+          cover_image: (cardData as any).cover_image,
         };
-        
-        const { error } = await supabase
-          .from('cards')
-          .insert([newCard]);
 
+        const { error } = await supabase.from('cards').insert([newCard]);
         if (error) throw error;
       }
 
@@ -166,42 +149,39 @@ const Index = () => {
   };
 
   const handleDeleteCard = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este card?")) return;
+    if (!isAdmin) {
+      toast({ title: "Sem permissão", description: "Apenas administradores podem excluir cards.", variant: "destructive" });
+      return;
+    }
+
+    const password = prompt("Digite a senha de confirmação para excluir o card:");
+    if (password === null) return;
+    if (password !== "78592121") {
+      toast({ title: "Senha incorreta", description: "A senha de confirmação está incorreta.", variant: "destructive" });
+      return;
+    }
 
     try {
-      const { error } = await supabase
-        .from('cards')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('cards').delete().eq('id', id);
       if (error) throw error;
-
-      toast({
-        title: "Card excluído!",
-        description: "O card foi removido com sucesso."
-      });
+      toast({ title: "Card excluído!", description: "O card foi removido com sucesso." });
     } catch (error) {
       console.error("Erro ao excluir card:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir o card.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro", description: "Não foi possível excluir o card.", variant: "destructive" });
     }
   };
 
   const handleEdit = (card: Card) => {
-    const password = prompt("Digite a senha para editar:");
-    if (password === "78592121") {
-      setEditingCard(card);
-      setFormOpen(true);
-    } else if (password !== null) {
-      toast({
-        title: "Senha incorreta",
-        description: "A senha digitada está incorreta.",
-        variant: "destructive"
-      });
+    if (!user) return;
+
+    // Editor só pode editar próprios; admin pode tudo
+    if (!isAdmin && card.user_id !== user.id) {
+      toast({ title: "Sem permissão", description: "Você só pode editar cards criados por você.", variant: "destructive" });
+      return;
     }
+
+    setEditingCard(card);
+    setFormOpen(true);
   };
 
   const handleView = (card: Card) => {
@@ -211,11 +191,11 @@ const Index = () => {
 
   const handleNewCard = () => {
     if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Você precisa fazer login para criar cards.",
-        variant: "destructive"
-      });
+      toast({ title: "Login necessário", description: "Você precisa fazer login para criar cards.", variant: "destructive" });
+      return;
+    }
+    if (!canCreate) {
+      toast({ title: "Sem permissão", description: "Você não tem permissão para criar um Card.", variant: "destructive" });
       return;
     }
     setEditingCard(null);
@@ -233,19 +213,16 @@ const Index = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar 
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-        
+        <AppSidebar />
+
         <div className="flex-1 flex flex-col">
-          <Header onNewCard={handleNewCard} />
-          
+          <Header onNewCard={handleNewCard} canCreate={canCreate} />
+
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">
             <SidebarTrigger className="hover:bg-accent transition-colors">
               <Menu className="h-5 w-5" />
             </SidebarTrigger>
-            <span className="text-sm text-muted-foreground">Menu de Categorias</span>
+            <span className="text-sm text-muted-foreground">Menu</span>
           </div>
 
           <main className="flex-1 container px-4 py-8 space-y-8 animate-fade-in-up">
@@ -256,7 +233,15 @@ const Index = () => {
                 </h2>
               </div>
 
-              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+              <div className="flex items-center gap-2 max-w-2xl mx-auto">
+                <div className="flex-1">
+                  <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                </div>
+                <CategoryFilterDropdown
+                  selected={selectedCategory}
+                  onSelect={setSelectedCategory}
+                />
+              </div>
             </div>
 
             <CardGrid
@@ -264,6 +249,9 @@ const Index = () => {
               onEdit={handleEdit}
               onDelete={handleDeleteCard}
               onView={handleView}
+              currentUserId={user?.id}
+              isAdmin={isAdmin}
+              isVisitor={isVisitor}
             />
           </main>
         </div>

@@ -309,6 +309,7 @@ const BancoLojas = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <PermissionsGuide />
       </div>
     </SidebarProvider>
   );

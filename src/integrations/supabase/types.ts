@@ -80,6 +80,42 @@ export type Database = {
         }
         Relationships: []
       }
+      repository_files: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          name: string
+          repository: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          name: string
+          repository: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          name?: string
+          repository?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       store_bank_files: {
         Row: {
           created_at: string

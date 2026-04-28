@@ -145,7 +145,7 @@ export const ImageGallery = ({
 
         {/* Gallery content */}
         <div
-          className="w-full h-full flex items-center justify-center px-16 md:px-24"
+          className="w-full h-full flex items-center justify-center px-16 md:px-24 pointer-events-none"
           onClick={(e) => e.stopPropagation()}
         >
           {isSingleImage ? (

@@ -29,9 +29,9 @@ export function AppSidebar() {
     { label: "Cards de Conhecimento", icon: LayoutGrid, path: "/" },
     { label: "PDFs Técnicos", icon: FileType, path: "/pdfs-tecnicos" },
     { label: "Banco de Lojas", icon: Store, path: "/banco-lojas" },
-    { label: "Scripts", icon: Code2, path: "/scripts", formats: ".cs .bat .txt .ps1 .vbs" },
-    { label: "Skins", icon: Palette, path: "/skins", formats: ".rar .zip" },
-    { label: "Doclayouts", icon: FileBox, path: "/doclayouts", formats: ".DOK .BAK .txt" },
+    { label: "Scripts", icon: Code2, path: "/scripts" },
+    { label: "Skins", icon: Palette, path: "/skins" },
+    { label: "Doclayouts", icon: FileBox, path: "/doclayouts" },
   ];
 
   return (

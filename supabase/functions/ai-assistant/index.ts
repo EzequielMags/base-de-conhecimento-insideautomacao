@@ -24,25 +24,17 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Buscar todos os cards
     const { data: cards, error: cardsError } = await supabase
       .from('cards')
-      .select('*')
+      .select('id, title, category, description, cover_image, images')
       .order('created_at', { ascending: false });
 
-    if (cardsError) {
-      console.error("Erro ao buscar cards:", cardsError);
-      throw cardsError;
-    }
+    if (cardsError) throw cardsError;
 
-    console.log(`Encontrados ${cards?.length || 0} cards`);
-
-    // Preparar contexto com os cards
-    const cardsContext = cards?.map((card) => 
-      `Card: ${card.title}\nCategoria: ${card.category}\nSolução: ${card.description}`
+    const cardsContext = cards?.map((card) =>
+      `ID: ${card.id}\nTítulo: ${card.title}\nCategoria: ${card.category}\nSolução: ${card.description}`
     ).join('\n\n') || 'Nenhum card encontrado.';
 
-    // Chamar a IA
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -54,18 +46,22 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Você é um assistente técnico especializado em ajudar funcionários a encontrar soluções para problemas.
-Você tem acesso a uma base de conhecimento com os seguintes cards de soluções:
+            content: `Você é um assistente técnico que ajuda funcionários a encontrar soluções na base de conhecimento.
+
+Cards disponíveis:
 
 ${cardsContext}
 
-Sua tarefa é:
-1. Entender o problema do usuário
-2. Buscar o card mais relevante na base de conhecimento
-3. Resumir a solução de forma clara e direta
-4. Mencionar o título do card e a categoria
+INSTRUÇÕES IMPORTANTES:
+1. Entenda o problema do usuário.
+2. Identifique até 4 cards mais relevantes (pode ser apenas 1 se for muito específico).
+3. Escreva uma resposta curta e útil em texto explicando como esses cards ajudam.
+4. NÃO liste os títulos dos cards no texto — eles aparecerão como mini-cards visuais.
+5. NO FINAL da resposta, adicione SEMPRE uma linha exata no formato:
+SUGGESTED_CARD_IDS: [id1, id2, id3]
+(use os IDs exatos dos cards listados acima, separados por vírgula, dentro dos colchetes; se nenhum for relevante, use lista vazia [])
 
-Seja direto e útil. Se não houver uma solução exata, sugira a mais próxima e explique por quê.`
+Seja direto, amigável e útil.`
           },
           {
             role: 'user',
@@ -82,15 +78,32 @@ Seja direto e útil. Se não houver uma solução exata, sugira a mais próxima 
     }
 
     const data = await response.json();
-    console.log("Resposta da IA recebida");
+    const fullText: string = data.choices[0].message.content || "";
 
-    const aiResponse = data.choices[0].message.content;
+    // Extrair IDs sugeridos
+    const idsMatch = fullText.match(/SUGGESTED_CARD_IDS:\s*\[([^\]]*)\]/i);
+    let suggestedIds: string[] = [];
+    if (idsMatch) {
+      suggestedIds = idsMatch[1]
+        .split(',')
+        .map((s) => s.trim().replace(/['"]/g, ''))
+        .filter(Boolean);
+    }
+    const cleanText = fullText.replace(/SUGGESTED_CARD_IDS:\s*\[[^\]]*\]/i, '').trim();
+
+    const suggestedCards = (cards || [])
+      .filter((c) => suggestedIds.includes(c.id))
+      .slice(0, 4)
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        category: c.category,
+        cover_image: c.cover_image || (Array.isArray(c.images) && c.images.length > 0 ? c.images[0] : null),
+      }));
 
     return new Response(
-      JSON.stringify({ response: aiResponse }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ response: cleanText, suggestedCards }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
@@ -98,10 +111,7 @@ Seja direto e útil. Se não houver uma solução exata, sugira a mais próxima 
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

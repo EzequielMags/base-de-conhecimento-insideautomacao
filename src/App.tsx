@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import PdfsTecnicos from "./pages/PdfsTecnicos";
 import BancoLojas from "./pages/BancoLojas";
+import Repository from "./pages/Repository";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,9 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/pdfs-tecnicos" element={<PdfsTecnicos />} />
           <Route path="/banco-lojas" element={<BancoLojas />} />
+          <Route path="/scripts" element={<Repository kind="scripts" />} />
+          <Route path="/skins" element={<Repository kind="skins" />} />
+          <Route path="/doclayouts" element={<Repository kind="doclayouts" />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

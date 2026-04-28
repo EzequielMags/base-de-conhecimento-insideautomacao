@@ -13,6 +13,7 @@ import { Header } from "@/components/Header";
 import { ArrowLeft, Upload, Download, Trash2, Store, Loader2, Menu, Image as ImageIcon, Package } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatFileSize, downloadFile } from "@/utils/fileUpload";
+import { PermissionsGuide } from "@/components/PermissionsGuide";
 
 interface StoreFile {
   id: string;

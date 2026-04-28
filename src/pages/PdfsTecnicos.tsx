@@ -11,6 +11,7 @@ import { Header } from "@/components/Header";
 import { ArrowLeft, Upload, Download, Trash2, FileText, Loader2, Menu } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatFileSize, downloadFile } from "@/utils/fileUpload";
+import { PermissionsGuide } from "@/components/PermissionsGuide";
 
 interface TechnicalPdf {
   id: string;
@@ -203,6 +204,7 @@ const PdfsTecnicos = () => {
             )}
           </main>
         </div>
+        <PermissionsGuide />
       </div>
     </SidebarProvider>
   );

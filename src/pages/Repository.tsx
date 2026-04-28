@@ -12,6 +12,7 @@ import { ArrowLeft, Upload, Download, Trash2, FileCode, Loader2, Menu } from "lu
 import { motion } from "framer-motion";
 import { formatFileSize, downloadFile } from "@/utils/fileUpload";
 import { useUserRole } from "@/hooks/use-user-role";
+import { PermissionsGuide } from "@/components/PermissionsGuide";
 
 export type RepositoryKind = "scripts" | "skins" | "doclayouts";
 
@@ -275,6 +276,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
             )}
           </main>
         </div>
+        <PermissionsGuide />
       </div>
     </SidebarProvider>
   );

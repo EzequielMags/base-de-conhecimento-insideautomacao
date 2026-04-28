@@ -1,23 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send } from "lucide-react";
+import { Bot, Send, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/types/card";
+
+interface SuggestedCard {
+  id: string;
+  title: string;
+  category: string;
+  cover_image: string | null;
+}
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  suggestedCards?: SuggestedCard[];
 }
 
-export const AIAssistant = () => {
+interface AIAssistantProps {
+  onOpenCard?: (card: Card) => void;
+}
+
+export const AIAssistant = ({ onOpenCard }: AIAssistantProps) => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!open) return;
+  }, [open]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -36,7 +53,7 @@ export const AIAssistant = () => {
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.response }
+        { role: "assistant", content: data.response, suggestedCards: data.suggestedCards || [] }
       ]);
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
@@ -50,6 +67,26 @@ export const AIAssistant = () => {
     }
   };
 
+  const handleOpenCard = async (cardId: string) => {
+    if (!onOpenCard) return;
+    try {
+      const { data, error } = await supabase.from("cards").select("*").eq("id", cardId).maybeSingle();
+      if (error) throw error;
+      if (data) {
+        const parsed = {
+          ...data,
+          files: (data.files || []) as any,
+          videos: (data.videos || []) as any,
+        } as Card;
+        onOpenCard(parsed);
+        setOpen(false);
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Erro", description: "Não foi possível abrir o card.", variant: "destructive" });
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -60,7 +97,7 @@ export const AIAssistant = () => {
           <Bot className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      
+
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
@@ -81,19 +118,57 @@ export const AIAssistant = () => {
             ) : (
               <div className="space-y-4">
                 {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-lg px-4 py-2 ${
-                        message.role === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <div key={index} className="space-y-2">
+                    <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[85%] rounded-lg px-4 py-2 ${
+                          message.role === "user"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      </div>
                     </div>
+
+                    {message.role === "assistant" && message.suggestedCards && message.suggestedCards.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        {message.suggestedCards.map((sc) => (
+                          <div
+                            key={sc.id}
+                            className="rounded-lg border bg-card overflow-hidden flex flex-col hover:shadow-md transition-all"
+                          >
+                            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+                              {sc.cover_image ? (
+                                <img
+                                  src={sc.cover_image}
+                                  alt={sc.title}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="p-2 flex flex-col gap-1 flex-1">
+                              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                {sc.category}
+                              </span>
+                              <p className="text-xs font-semibold line-clamp-2 leading-tight">
+                                {sc.title}
+                              </p>
+                              <Button
+                                size="sm"
+                                className="mt-auto h-7 text-xs"
+                                onClick={() => handleOpenCard(sc.id)}
+                              >
+                                Ver Card
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
                 {loading && (

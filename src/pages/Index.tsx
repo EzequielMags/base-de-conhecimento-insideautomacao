@@ -7,6 +7,7 @@ import { CardGrid } from "@/components/CardGrid";
 import { CardForm } from "@/components/CardForm";
 import { CardDetail } from "@/components/CardDetail";
 import { AIAssistant } from "@/components/AIAssistant";
+import { PermissionsGuide } from "@/components/PermissionsGuide";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card } from "@/types/card";
@@ -275,7 +276,8 @@ const Index = () => {
           }}
         />
 
-        <AIAssistant />
+        <AIAssistant onOpenCard={handleView} />
+        <PermissionsGuide />
       </div>
     </SidebarProvider>
   );

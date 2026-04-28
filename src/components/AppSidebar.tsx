@@ -1,4 +1,4 @@
-import { LayoutGrid, FileType, Store } from "lucide-react";
+import { LayoutGrid, FileType, Store, Code2, Palette, FileBox } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -12,16 +12,26 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+interface NavSection {
+  label: string;
+  icon: any;
+  path: string;
+  formats?: string;
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
   const location = useLocation();
 
-  const sections = [
+  const sections: NavSection[] = [
     { label: "Cards de Conhecimento", icon: LayoutGrid, path: "/" },
     { label: "PDFs Técnicos", icon: FileType, path: "/pdfs-tecnicos" },
     { label: "Banco de Lojas", icon: Store, path: "/banco-lojas" },
+    { label: "Scripts", icon: Code2, path: "/scripts", formats: ".cs .bat .txt .ps1 .vbs" },
+    { label: "Skins", icon: Palette, path: "/skins", formats: ".rar .zip" },
+    { label: "Doclayouts", icon: FileBox, path: "/doclayouts", formats: ".DOK .BAK .txt" },
   ];
 
   return (
@@ -48,6 +58,11 @@ export function AppSidebar() {
                       <Icon className={`h-4 w-4 ${isCollapsed ? "" : "mr-2"}`} />
                       {!isCollapsed && <span>{section.label}</span>}
                     </SidebarMenuButton>
+                    {!isCollapsed && section.formats && (
+                      <p className="pl-9 pr-2 -mt-0.5 mb-1 text-[10px] text-muted-foreground font-mono leading-tight">
+                        {section.formats}
+                      </p>
+                    )}
                   </SidebarMenuItem>
                 );
               })}

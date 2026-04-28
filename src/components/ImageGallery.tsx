@@ -145,7 +145,7 @@ export const ImageGallery = ({
 
         {/* Gallery content */}
         <div
-          className="w-full h-full flex items-center justify-center px-16 md:px-24"
+          className="w-full h-full flex items-center justify-center px-16 md:px-24 pointer-events-none"
           onClick={(e) => e.stopPropagation()}
         >
           {isSingleImage ? (
@@ -156,13 +156,13 @@ export const ImageGallery = ({
               transition={{ duration: 0.3, ease: "easeOut" }}
               src={images[0]}
               alt="Visualização ampliada"
-              className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
+              className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg pointer-events-auto"
               onClick={onClose}
             />
           ) : (
             <Carousel
               setApi={setApi}
-              className="w-full max-w-5xl"
+              className="w-full max-w-5xl pointer-events-auto"
               opts={{
                 startIndex: initialIndex,
                 loop: true,

@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      autopen_drivers: {
+        Row: {
+          created_at: string
+          id: string
+          link: string
+          user_id: string | null
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link: string
+          user_id?: string | null
+          version: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link?: string
+          user_id?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       cards: {
         Row: {
           author_name: string | null

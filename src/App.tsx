@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import PdfsTecnicos from "./pages/PdfsTecnicos";
 import BancoLojas from "./pages/BancoLojas";
 import Repository from "./pages/Repository";
+import Impressoras from "./pages/Impressoras";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/scripts" element={<Repository kind="scripts" />} />
           <Route path="/skins" element={<Repository kind="skins" />} />
           <Route path="/doclayouts" element={<Repository kind="doclayouts" />} />
+          <Route path="/impressoras" element={<Impressoras />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,4 +1,4 @@
-import { LayoutGrid, FileType, Store, Code2, Palette, FileBox } from "lucide-react";
+import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -32,6 +32,7 @@ export function AppSidebar() {
     { label: "Scripts", icon: Code2, path: "/scripts" },
     { label: "Skins", icon: Palette, path: "/skins" },
     { label: "Doclayouts", icon: FileBox, path: "/doclayouts" },
+    { label: "Impressoras", icon: Printer, path: "/impressoras" },
   ];
 
   return (

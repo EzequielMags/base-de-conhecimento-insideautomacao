@@ -46,7 +46,7 @@ import { formatFileSize, downloadFile } from "@/utils/fileUpload";
 import { useUserRole } from "@/hooks/use-user-role";
 import { PermissionsGuide } from "@/components/PermissionsGuide";
 
-const BRANDS = ["EPSON", "TANCA", "BEMATECH", "ELGIN", "POS", "TOMATE", "CONTROL ID"] as const;
+const BRANDS = ["EPSON", "TANCA", "BEMATECH", "ELGIN", "POS", "TOMATE", "CONTROL ID", "GERTEC"] as const;
 const TYPES = ["DRIVER", "UTILITARIO"] as const;
 const ALLOWED_EXT = [".zip", ".rar", ".exe"];
 const BUCKET = "printer-files";

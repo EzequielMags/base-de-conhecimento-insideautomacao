@@ -175,7 +175,7 @@ export default function Autopen() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <Header />
+          <Header onNewCard={() => navigate("/")} />
           <div className="border-b border-border p-3 flex items-center gap-3">
             <SidebarTrigger />
             <Button variant="ghost" size="sm" onClick={() => navigate("/")}>

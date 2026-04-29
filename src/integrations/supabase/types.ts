@@ -59,6 +59,45 @@ export type Database = {
         }
         Relationships: []
       }
+      printer_files: {
+        Row: {
+          brand: string
+          created_at: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          brand: string
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

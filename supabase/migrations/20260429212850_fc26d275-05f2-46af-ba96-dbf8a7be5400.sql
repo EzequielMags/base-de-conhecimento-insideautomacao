@@ -1,0 +1,2 @@
+ALTER TABLE public.printer_files DROP CONSTRAINT IF EXISTS printer_files_brand_check;
+ALTER TABLE public.printer_files ADD CONSTRAINT printer_files_brand_check CHECK (brand = ANY (ARRAY['EPSON'::text, 'TANCA'::text, 'BEMATECH'::text, 'ELGIN'::text, 'POS'::text, 'TOMATE'::text, 'CONTROL ID'::text, 'GERTEC'::text]));

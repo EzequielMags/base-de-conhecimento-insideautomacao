@@ -32,6 +32,7 @@ const categories: CardCategory[] = [
 
 export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => {
   const { toast } = useToast();
+  const { isAdmin, user: roleUser } = useUserRole();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<CardCategory>("Impressora");
@@ -43,6 +44,8 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
   const [authorName, setAuthorName] = useState("");
   const [coverImage, setCoverImage] = useState<string>("");
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [signatureEnabled, setSignatureEnabled] = useState(true);
+  const [profileName, setProfileName] = useState("");
 
   useEffect(() => {
     if (editCard) {

@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Card as CardType, CardCategory, CardFile, CardVideo } from "@/types/card";
 import { Upload, X, FileIcon, Link as LinkIcon, Video, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile, formatFileSize, getFileIcon } from "@/utils/fileUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUserRole } from "@/hooks/use-user-role";
 
 interface CardFormProps {
   open: boolean;

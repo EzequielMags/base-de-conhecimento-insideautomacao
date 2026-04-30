@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Card as CardType, CardCategory, CardFile, CardVideo } from "@/types/card";
 import { Upload, X, FileIcon, Link as LinkIcon, Video, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile, formatFileSize, getFileIcon } from "@/utils/fileUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUserRole } from "@/hooks/use-user-role";
 
 interface CardFormProps {
   open: boolean;
@@ -30,6 +32,7 @@ const categories: CardCategory[] = [
 
 export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => {
   const { toast } = useToast();
+  const { isAdmin, user: roleUser } = useUserRole();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<CardCategory>("Impressora");
@@ -41,6 +44,22 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
   const [authorName, setAuthorName] = useState("");
   const [coverImage, setCoverImage] = useState<string>("");
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [signatureEnabled, setSignatureEnabled] = useState(true);
+  const [profileName, setProfileName] = useState("");
+
+  // Fetch logged-in user's profile name
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!roleUser) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", roleUser.id)
+        .single();
+      if (data?.name) setProfileName(data.name);
+    };
+    fetchProfile();
+  }, [roleUser]);
 
   useEffect(() => {
     if (editCard) {
@@ -51,16 +70,25 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
       setVideos(editCard.videos || []);
       setAuthorName((editCard as any).author_name || "");
       setCoverImage((editCard as any).cover_image || "");
+      // If editing and author matches profile, keep signature on
+      setSignatureEnabled(true);
     } else {
       setTitle("");
       setDescription("");
       setCategory("Impressora");
       setFiles([]);
       setVideos([]);
-      setAuthorName("");
       setCoverImage("");
+      setSignatureEnabled(true);
     }
   }, [editCard, open]);
+
+  // Auto-fill author when signature is enabled
+  useEffect(() => {
+    if (signatureEnabled && profileName) {
+      setAuthorName(profileName);
+    }
+  }, [signatureEnabled, profileName]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = e.target.files;
@@ -274,14 +302,32 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="author">Autor do Card</Label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="author">Autor do Card</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="signature-toggle" className="text-sm text-muted-foreground">Assinatura</Label>
+                  <Switch
+                    id="signature-toggle"
+                    checked={signatureEnabled}
+                    onCheckedChange={setSignatureEnabled}
+                    disabled={!isAdmin}
+                  />
+                </div>
+              </div>
               <Input
                 id="author"
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 placeholder="Digite o nome do autor"
+                disabled={signatureEnabled}
               />
+              {signatureEnabled && (
+                <p className="text-xs text-muted-foreground">
+                  Assinatura automática com o nome do seu perfil.
+                  {!isAdmin && " Apenas ADMIN pode desativar."}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

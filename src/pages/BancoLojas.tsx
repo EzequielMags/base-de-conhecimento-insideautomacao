@@ -10,10 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
-import { ArrowLeft, Upload, Download, Trash2, Store, Loader2, Menu, Image as ImageIcon, Package } from "lucide-react";
+import { ArrowLeft, Upload, Download, Trash2, Store, Loader2, Menu, Package } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatFileSize, downloadFile } from "@/utils/fileUpload";
 import { PermissionsGuide } from "@/components/PermissionsGuide";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import excelIcon from "@/assets/excel-icon.png";
+import xdSoftwareIcon from "@/assets/xd-software-icon.png";
 
 interface StoreFile {
   id: string;
@@ -24,6 +28,7 @@ interface StoreFile {
   file_path: string;
   file_type: string | null;
   file_size: number | null;
+  file_category: string;
   created_at: string;
 }
 
@@ -39,8 +44,8 @@ const BancoLojas = () => {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [customName, setCustomName] = useState("");
+  const [fileCategory, setFileCategory] = useState<"cardapio" | "banco">("cardapio");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -57,7 +62,7 @@ const BancoLojas = () => {
     if (error) {
       toast({ title: "Erro", description: "Não foi possível carregar arquivos.", variant: "destructive" });
     } else {
-      setFiles(data || []);
+      setFiles((data as any[]) || []);
     }
     setLoading(false);
   };
@@ -70,8 +75,8 @@ const BancoLojas = () => {
       return;
     }
     setSelectedFile(null);
-    setThumbnailFile(null);
     setCustomName("");
+    setFileCategory("cardapio");
     setDialogOpen(true);
   };
 
@@ -94,7 +99,6 @@ const BancoLojas = () => {
     }
     setUploading(true);
     try {
-      // Sanitiza o nome do arquivo (storage rejeita espaços/acentos/caracteres especiais no path)
       const sanitize = (n: string) =>
         n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
          .replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -103,53 +107,29 @@ const BancoLojas = () => {
       const safeName = sanitize(selectedFile.name);
       const path = `${user.id}/${Date.now()}-${safeName}`;
 
-      console.log("[BancoLojas] uploading", { path, size: selectedFile.size, ext });
-
       const { error: upErr } = await supabase.storage.from("store-bank").upload(path, selectedFile, {
         cacheControl: "3600",
         upsert: false,
       });
-      if (upErr) {
-        console.error("[BancoLojas] storage upload error", upErr);
-        throw upErr;
-      }
+      if (upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from("store-bank").getPublicUrl(path);
-
-      // upload thumbnail if any
-      let thumbUrl: string | null = null;
-      if (thumbnailFile) {
-        const tSafe = sanitize(thumbnailFile.name);
-        const tPath = `${user.id}/thumbs/${Date.now()}-${tSafe}`;
-        const { error: tErr } = await supabase.storage.from("store-bank").upload(tPath, thumbnailFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-        if (tErr) {
-          console.error("[BancoLojas] thumbnail upload error", tErr);
-          throw tErr;
-        }
-        thumbUrl = supabase.storage.from("store-bank").getPublicUrl(tPath).data.publicUrl;
-      }
 
       const { error: insErr } = await supabase.from("store_bank_files").insert({
         user_id: user.id,
         custom_name: customName.trim(),
         original_name: selectedFile.name,
-        thumbnail_url: thumbUrl,
+        thumbnail_url: null,
         file_url: publicUrl,
         file_path: path,
         file_type: ext,
         file_size: selectedFile.size,
-      });
-      if (insErr) {
-        console.error("[BancoLojas] db insert error", insErr);
-        throw insErr;
-      }
+        file_category: fileCategory,
+      } as any);
+      if (insErr) throw insErr;
 
       toast({ title: "Upload concluído!", description: "Arquivo adicionado." });
       setDialogOpen(false);
       setSelectedFile(null);
-      setThumbnailFile(null);
       setCustomName("");
       await load();
     } catch (err: any) {
@@ -182,6 +162,65 @@ const BancoLojas = () => {
     f.custom_name.toLowerCase().includes(search.toLowerCase()) ||
     f.original_name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const cardapioFiles = filtered.filter(f => f.file_category === "cardapio");
+  const bancoFiles = filtered.filter(f => f.file_category !== "cardapio");
+
+  const getCategoryIcon = (category: string) => {
+    return category === "cardapio" ? excelIcon : xdSoftwareIcon;
+  };
+
+  const renderFileGrid = (items: StoreFile[]) => {
+    if (items.length === 0) {
+      return (
+        <div className="text-center py-16 text-muted-foreground">
+          <Store className="h-16 w-16 mx-auto mb-4 opacity-50" />
+          <p>Nenhum arquivo encontrado nesta seção.</p>
+        </div>
+      );
+    }
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+        {items.map((file) => (
+          <motion.div
+            key={file.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden">
+              <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden p-4">
+                <img
+                  src={getCategoryIcon(file.file_category)}
+                  alt={file.file_category === "cardapio" ? "Cardápio" : "Banco"}
+                  className="h-20 w-20 object-contain"
+                  loading="lazy"
+                />
+              </div>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <p className="font-semibold truncate" title={file.custom_name}>{file.custom_name}</p>
+                  <p className="text-xs text-muted-foreground uppercase">{file.file_type}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {file.file_size ? formatFileSize(file.file_size) : ""}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="flex-1 gap-2"
+                    onClick={() => downloadFile(file.file_url, file.original_name)}>
+                    <Download className="h-4 w-4" /> Baixar
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(file)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <SidebarProvider>
@@ -221,50 +260,23 @@ const BancoLojas = () => {
 
             {loading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-            ) : filtered.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
-                <Store className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p>Nenhum arquivo encontrado.</p>
-              </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
-                {filtered.map((file) => (
-                  <motion.div
-                    key={file.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Card className="hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden">
-                      <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
-                        {file.thumbnail_url ? (
-                          <img src={file.thumbnail_url} alt={file.custom_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Package className="h-16 w-16 text-muted-foreground" />
-                        )}
-                      </div>
-                      <CardContent className="p-4 space-y-3">
-                        <div>
-                          <p className="font-semibold truncate" title={file.custom_name}>{file.custom_name}</p>
-                          <p className="text-xs text-muted-foreground uppercase">{file.file_type}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {file.file_size ? formatFileSize(file.file_size) : ""}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1 gap-2"
-                            onClick={() => downloadFile(file.file_url, file.original_name)}>
-                            <Download className="h-4 w-4" /> Baixar
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(file)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
+              <Tabs defaultValue="cardapio" className="max-w-6xl mx-auto">
+                <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+                  <TabsTrigger value="cardapio" className="gap-2">
+                    <img src={excelIcon} alt="" className="h-4 w-4" /> Cardápios
+                  </TabsTrigger>
+                  <TabsTrigger value="banco" className="gap-2">
+                    <img src={xdSoftwareIcon} alt="" className="h-4 w-4" /> Bancos
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="cardapio" className="mt-6">
+                  {renderFileGrid(cardapioFiles)}
+                </TabsContent>
+                <TabsContent value="banco" className="mt-6">
+                  {renderFileGrid(bancoFiles)}
+                </TabsContent>
+              </Tabs>
             )}
           </main>
         </div>
@@ -275,6 +287,27 @@ const BancoLojas = () => {
               <DialogTitle>Adicionar arquivo ao Banco de Lojas</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tipo *</Label>
+                <RadioGroup
+                  value={fileCategory}
+                  onValueChange={(v) => setFileCategory(v as "cardapio" | "banco")}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="cardapio" id="cat-cardapio" />
+                    <Label htmlFor="cat-cardapio" className="flex items-center gap-2 cursor-pointer">
+                      <img src={excelIcon} alt="" className="h-5 w-5" /> Cardápio
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="banco" id="cat-banco" />
+                    <Label htmlFor="cat-banco" className="flex items-center gap-2 cursor-pointer">
+                      <img src={xdSoftwareIcon} alt="" className="h-5 w-5" /> Banco
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
               <div className="space-y-2">
                 <Label>Arquivo (ZIP, RAR, XLS, XLSX) *</Label>
                 <Input type="file" accept=".zip,.rar,.xls,.xlsx" onChange={handleFileSelect} />
@@ -291,13 +324,6 @@ const BancoLojas = () => {
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Miniatura (opcional)</Label>
-                <Input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} />
-                {thumbnailFile && (
-                  <p className="text-xs text-muted-foreground">{thumbnailFile.name}</p>
-                )}
               </div>
             </div>
             <DialogFooter>

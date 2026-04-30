@@ -8,10 +8,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
-import { ArrowLeft, Upload, Download, Trash2, FileText, Loader2, Menu } from "lucide-react";
+import { ArrowLeft, Upload, Download, Trash2, FileText, Loader2, Menu, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatFileSize, downloadFile } from "@/utils/fileUpload";
 import { PermissionsGuide } from "@/components/PermissionsGuide";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface TechnicalPdf {
   id: string;
@@ -30,6 +32,7 @@ const PdfsTecnicos = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
+  const [previewEnabled, setPreviewEnabled] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -155,6 +158,21 @@ const PdfsTecnicos = () => {
               </Button>
             </div>
 
+            {/* Preview Toggle */}
+            <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center gap-2 bg-card border rounded-lg px-4 py-2">
+                {previewEnabled ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                <Label htmlFor="preview-toggle" className="text-sm font-medium cursor-pointer select-none">
+                  Pré-visualização
+                </Label>
+                <Switch
+                  id="preview-toggle"
+                  checked={previewEnabled}
+                  onCheckedChange={setPreviewEnabled}
+                />
+              </div>
+            </div>
+
             {loading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
             ) : filtered.length === 0 ? (
@@ -163,18 +181,19 @@ const PdfsTecnicos = () => {
                 <p>Nenhum PDF encontrado.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+              <div className={`grid gap-4 max-w-6xl mx-auto ${previewEnabled ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
                 {filtered.map((pdf) => (
                   <motion.div
                     key={pdf.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
+                    layout
                   >
-                    <Card className="hover:shadow-lg transition-all hover:-translate-y-1">
+                    <Card className="hover:shadow-lg transition-all overflow-hidden">
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-start gap-3">
-                          <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                          <div className="p-3 rounded-lg bg-primary/10 text-primary shrink-0">
                             <FileText className="h-8 w-8" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -187,6 +206,17 @@ const PdfsTecnicos = () => {
                             </p>
                           </div>
                         </div>
+
+                        {previewEnabled && (
+                          <div className="w-full rounded-lg overflow-hidden border bg-muted/30">
+                            <iframe
+                              src={`${pdf.file_url}#toolbar=0&navpanes=0`}
+                              className="w-full h-[400px]"
+                              title={`Preview de ${pdf.name}`}
+                            />
+                          </div>
+                        )}
+
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline" className="flex-1 gap-2"
                             onClick={() => downloadFile(pdf.file_url, pdf.name)}>

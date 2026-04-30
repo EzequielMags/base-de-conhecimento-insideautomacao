@@ -11,6 +11,7 @@ import BancoLojas from "./pages/BancoLojas";
 import Repository from "./pages/Repository";
 import Impressoras from "./pages/Impressoras";
 import Autopen from "./pages/Autopen";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/doclayouts" element={<Repository kind="doclayouts" />} />
           <Route path="/impressoras" element={<Impressoras />} />
           <Route path="/autopen" element={<Autopen />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

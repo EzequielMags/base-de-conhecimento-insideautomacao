@@ -1,5 +1,6 @@
 import { Moon, Sun, Plus, LogOut, LogIn, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BackgroundMusicPlayer } from "@/components/BackgroundMusicPlayer";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";

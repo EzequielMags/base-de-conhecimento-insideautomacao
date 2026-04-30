@@ -302,14 +302,32 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="author">Autor do Card</Label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="author">Autor do Card</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="signature-toggle" className="text-sm text-muted-foreground">Assinatura</Label>
+                  <Switch
+                    id="signature-toggle"
+                    checked={signatureEnabled}
+                    onCheckedChange={setSignatureEnabled}
+                    disabled={!isAdmin}
+                  />
+                </div>
+              </div>
               <Input
                 id="author"
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 placeholder="Digite o nome do autor"
+                disabled={signatureEnabled}
               />
+              {signatureEnabled && (
+                <p className="text-xs text-muted-foreground">
+                  Assinatura automática com o nome do seu perfil.
+                  {!isAdmin && " Apenas ADMIN pode desativar."}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

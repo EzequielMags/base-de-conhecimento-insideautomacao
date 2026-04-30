@@ -95,6 +95,8 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
             </Button>
           )}
           
+          <BackgroundMusicPlayer />
+          
           <Button
             variant="outline"
             size="icon"

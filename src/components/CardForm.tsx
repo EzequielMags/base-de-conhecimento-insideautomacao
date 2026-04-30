@@ -47,6 +47,20 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
   const [signatureEnabled, setSignatureEnabled] = useState(true);
   const [profileName, setProfileName] = useState("");
 
+  // Fetch logged-in user's profile name
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!roleUser) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", roleUser.id)
+        .single();
+      if (data?.name) setProfileName(data.name);
+    };
+    fetchProfile();
+  }, [roleUser]);
+
   useEffect(() => {
     if (editCard) {
       setTitle(editCard.title);
@@ -56,16 +70,25 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
       setVideos(editCard.videos || []);
       setAuthorName((editCard as any).author_name || "");
       setCoverImage((editCard as any).cover_image || "");
+      // If editing and author matches profile, keep signature on
+      setSignatureEnabled(true);
     } else {
       setTitle("");
       setDescription("");
       setCategory("Impressora");
       setFiles([]);
       setVideos([]);
-      setAuthorName("");
       setCoverImage("");
+      setSignatureEnabled(true);
     }
   }, [editCard, open]);
+
+  // Auto-fill author when signature is enabled
+  useEffect(() => {
+    if (signatureEnabled && profileName) {
+      setAuthorName(profileName);
+    }
+  }, [signatureEnabled, profileName]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = e.target.files;

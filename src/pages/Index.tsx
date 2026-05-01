@@ -9,6 +9,7 @@ import { CardDetail } from "@/components/CardDetail";
 import { AIAssistant } from "@/components/AIAssistant";
 import { PermissionsGuide } from "@/components/PermissionsGuide";
 import { AppSidebar } from "@/components/AppSidebar";
+import { CnpjLookup } from "@/components/CnpjLookup";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card } from "@/types/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -254,6 +255,10 @@ const Index = () => {
               isAdmin={isAdmin}
               isVisitor={isVisitor}
             />
+
+            <div className="max-w-3xl mx-auto pt-8">
+              <CnpjLookup />
+            </div>
           </main>
         </div>
 

@@ -12,6 +12,7 @@ import Repository from "./pages/Repository";
 import Impressoras from "./pages/Impressoras";
 import Autopen from "./pages/Autopen";
 import Settings from "./pages/Settings";
+import { HoverSoundEffect } from "./components/HoverSoundEffect";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <HoverSoundEffect />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />

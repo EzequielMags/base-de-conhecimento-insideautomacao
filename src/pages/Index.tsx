@@ -30,6 +30,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user, isAdmin, isEditor, isVisitor, canCreate } = useUserRole();
+  const { open: chatOpen } = useIntegriChat();
 
   useEffect(() => {
     loadCards();

@@ -12,7 +12,9 @@ import Repository from "./pages/Repository";
 import Impressoras from "./pages/Impressoras";
 import Autopen from "./pages/Autopen";
 import Settings from "./pages/Settings";
+import ConsultaCnpj from "./pages/ConsultaCnpj";
 import { HoverSoundEffect } from "./components/HoverSoundEffect";
+import { IntegriChatProvider } from "./components/IntegriChatContext";
 
 const queryClient = new QueryClient();
 

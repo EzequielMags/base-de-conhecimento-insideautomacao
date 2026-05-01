@@ -1,4 +1,4 @@
-import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool } from "lucide-react";
+import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2, MessageSquare } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useIntegriChat } from "@/components/IntegriChatContext";
 
 interface NavSection {
   label: string;
@@ -24,6 +25,7 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
   const navigate = useNavigate();
   const location = useLocation();
+  const { open: chatOpen, toggle: toggleChat } = useIntegriChat();
 
   const sections: NavSection[] = [
     { label: "Cards de Conhecimento", icon: LayoutGrid, path: "/" },
@@ -34,6 +36,7 @@ export function AppSidebar() {
     { label: "Doclayouts", icon: FileBox, path: "/doclayouts" },
     { label: "Impressoras", icon: Printer, path: "/impressoras" },
     { label: "AUTOPEN", icon: PenTool, path: "/autopen" },
+    { label: "Consulta CNPJ", icon: Building2, path: "/consulta-cnpj" },
   ];
 
   return (
@@ -68,6 +71,30 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
+
+              {/* Integgri Chat — toggle split screen */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={toggleChat}
+                  className={`transition-all duration-200 ${
+                    chatOpen
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "hover:bg-accent"
+                  }`}
+                >
+                  {/* Placeholder para a logo da Integgri — substitua o src quando tiver o asset */}
+                  <img
+                    src="/placeholder.svg"
+                    alt="Integgri"
+                    className={`h-4 w-4 object-contain ${isCollapsed ? "" : "mr-2"}`}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  <MessageSquare className={`h-4 w-4 ${isCollapsed ? "" : "mr-2"} hidden`} />
+                  {!isCollapsed && <span>Integgri Chat</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

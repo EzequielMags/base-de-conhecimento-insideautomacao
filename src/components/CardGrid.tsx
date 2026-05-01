@@ -9,9 +9,10 @@ interface CardGridProps {
   currentUserId?: string;
   isAdmin?: boolean;
   isVisitor?: boolean;
+  compact?: boolean;
 }
 
-export const CardGrid = ({ cards, onEdit, onDelete, onView, currentUserId, isAdmin, isVisitor }: CardGridProps) => {
+export const CardGrid = ({ cards, onEdit, onDelete, onView, currentUserId, isAdmin, isVisitor, compact }: CardGridProps) => {
   if (cards.length === 0) {
     return (
       <div className="text-center py-16">
@@ -22,8 +23,12 @@ export const CardGrid = ({ cards, onEdit, onDelete, onView, currentUserId, isAdm
     );
   }
 
+  const gridCols = compact
+    ? "grid grid-cols-1 md:grid-cols-2 gap-6"
+    : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className={gridCols}>
       {cards.map((card) => {
         const canEdit = isAdmin || (!isVisitor && card.user_id === currentUserId);
         const canDelete = !!isAdmin;

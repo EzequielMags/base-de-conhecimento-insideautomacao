@@ -9,7 +9,8 @@ import { CardDetail } from "@/components/CardDetail";
 import { AIAssistant } from "@/components/AIAssistant";
 import { PermissionsGuide } from "@/components/PermissionsGuide";
 import { AppSidebar } from "@/components/AppSidebar";
-import { CnpjLookup } from "@/components/CnpjLookup";
+import { IntegriChatPanel } from "@/components/IntegriChatPanel";
+import { useIntegriChat } from "@/components/IntegriChatContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card } from "@/types/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user, isAdmin, isEditor, isVisitor, canCreate } = useUserRole();
+  const { open: chatOpen } = useIntegriChat();
 
   useEffect(() => {
     loadCards();
@@ -217,7 +219,11 @@ const Index = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
 
-        <div className="flex-1 flex flex-col">
+        <div
+          className={`flex-1 flex flex-col transition-all duration-300 ${
+            chatOpen ? "md:mr-[40vw]" : ""
+          }`}
+        >
           <Header onNewCard={handleNewCard} canCreate={canCreate} />
 
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">
@@ -254,14 +260,12 @@ const Index = () => {
               currentUserId={user?.id}
               isAdmin={isAdmin}
               isVisitor={isVisitor}
+              compact={chatOpen}
             />
-
-            <div className="max-w-3xl mx-auto pt-8">
-              <CnpjLookup />
-            </div>
           </main>
         </div>
 
+        <IntegriChatPanel />
         <CardForm
           open={formOpen}
           onClose={() => {

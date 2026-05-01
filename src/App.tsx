@@ -12,7 +12,9 @@ import Repository from "./pages/Repository";
 import Impressoras from "./pages/Impressoras";
 import Autopen from "./pages/Autopen";
 import Settings from "./pages/Settings";
+import ConsultaCnpj from "./pages/ConsultaCnpj";
 import { HoverSoundEffect } from "./components/HoverSoundEffect";
+import { IntegriChatProvider } from "./components/IntegriChatContext";
 
 const queryClient = new QueryClient();
 
@@ -23,20 +25,23 @@ const App = () => (
       <Sonner />
       <HoverSoundEffect />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/pdfs-tecnicos" element={<PdfsTecnicos />} />
-          <Route path="/banco-lojas" element={<BancoLojas />} />
-          <Route path="/scripts" element={<Repository kind="scripts" />} />
-          <Route path="/skins" element={<Repository kind="skins" />} />
-          <Route path="/doclayouts" element={<Repository kind="doclayouts" />} />
-          <Route path="/impressoras" element={<Impressoras />} />
-          <Route path="/autopen" element={<Autopen />} />
-          <Route path="/settings" element={<Settings />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <IntegriChatProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/pdfs-tecnicos" element={<PdfsTecnicos />} />
+            <Route path="/banco-lojas" element={<BancoLojas />} />
+            <Route path="/scripts" element={<Repository kind="scripts" />} />
+            <Route path="/skins" element={<Repository kind="skins" />} />
+            <Route path="/doclayouts" element={<Repository kind="doclayouts" />} />
+            <Route path="/impressoras" element={<Impressoras />} />
+            <Route path="/autopen" element={<Autopen />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/consulta-cnpj" element={<ConsultaCnpj />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </IntegriChatProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

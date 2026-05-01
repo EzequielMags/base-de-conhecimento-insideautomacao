@@ -219,7 +219,11 @@ const Index = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
 
-        <div className="flex-1 flex flex-col">
+        <div
+          className={`flex-1 flex flex-col transition-all duration-300 ${
+            chatOpen ? "md:mr-[40vw]" : ""
+          }`}
+        >
           <Header onNewCard={handleNewCard} canCreate={canCreate} />
 
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">
@@ -257,13 +261,10 @@ const Index = () => {
               isAdmin={isAdmin}
               isVisitor={isVisitor}
             />
-
-            <div className="max-w-3xl mx-auto pt-8">
-              <CnpjLookup />
-            </div>
           </main>
         </div>
 
+        <IntegriChatPanel />
         <CardForm
           open={formOpen}
           onClose={() => {

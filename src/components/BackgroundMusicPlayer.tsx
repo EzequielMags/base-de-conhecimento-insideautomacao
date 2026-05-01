@@ -2,13 +2,14 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TRACKS = [
-  { id: "focus", label: "Foco Profundo", url: "https://cdn.pixabay.com/audio/2024/11/28/audio_3a179effab.mp3" },
-  { id: "relax", label: "Ambiente Relax", url: "https://cdn.pixabay.com/audio/2024/09/10/audio_6e4e1c08e1.mp3" },
-  { id: "lofi", label: "Lo-Fi Chill", url: "https://cdn.pixabay.com/audio/2022/05/17/audio_407cace4c6.mp3" },
+  { id: "track1", label: "Opera GX - Ambient Foco", url: "/assets/audio/opera-gx-track1.mp3" },
+  { id: "track2", label: "Opera GX - Chill Synth", url: "/assets/audio/opera-gx-track2.mp3" },
+  { id: "track3", label: "Opera GX - Lo-Fi Vibe", url: "/assets/audio/opera-gx-track3.mp3" },
 ];
 
 export const BackgroundMusicPlayer = () => {
@@ -21,8 +22,21 @@ export const BackgroundMusicPlayer = () => {
     const audio = new Audio(TRACKS[0].url);
     audio.loop = true;
     audio.volume = 0.5;
+    audio.preload = "auto";
     audioRef.current = audio;
-    return () => { audio.pause(); audio.src = ""; };
+
+    const handleEnded = () => {
+      // Safety: re-play if loop somehow fails
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    };
+    audio.addEventListener("ended", handleEnded);
+
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+      audio.pause();
+      audio.src = "";
+    };
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -30,10 +44,15 @@ export const BackgroundMusicPlayer = () => {
     if (!audio) return;
     if (playing) {
       audio.pause();
+      setPlaying(false);
     } else {
-      audio.play().catch(() => {});
+      audio.play()
+        .then(() => setPlaying(true))
+        .catch((err) => {
+          console.error("Erro ao reproduzir áudio:", err);
+          setPlaying(false);
+        });
     }
-    setPlaying(!playing);
   }, [playing]);
 
   const changeVolume = useCallback((v: number[]) => {
@@ -42,18 +61,25 @@ export const BackgroundMusicPlayer = () => {
     if (audioRef.current) audioRef.current.volume = val / 100;
   }, []);
 
-  const changeTrack = useCallback((idx: number) => {
+  const changeTrack = useCallback((value: string) => {
+    const idx = TRACKS.findIndex((t) => t.id === value);
+    if (idx < 0) return;
     const audio = audioRef.current;
     if (!audio) return;
-    const wasPlaying = playing;
     audio.pause();
     audio.src = TRACKS[idx].url;
+    audio.loop = true;
+    audio.volume = volume / 100;
     audio.load();
     setTrackIndex(idx);
-    if (wasPlaying) {
-      audio.play().catch(() => {});
-    }
-  }, [playing]);
+    // Auto-play new track maintaining current volume
+    audio.play()
+      .then(() => setPlaying(true))
+      .catch((err) => {
+        console.error("Erro ao trocar faixa:", err);
+        setPlaying(false);
+      });
+  }, [volume]);
 
   return (
     <Popover>
@@ -85,22 +111,16 @@ export const BackgroundMusicPlayer = () => {
       <PopoverContent className="w-64 p-4 space-y-4" align="end">
         <div className="space-y-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Faixa</p>
-          <div className="space-y-1">
-            {TRACKS.map((t, i) => (
-              <button
-                key={t.id}
-                onClick={() => changeTrack(i)}
-                className={cn(
-                  "w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors",
-                  i === trackIndex
-                    ? "bg-primary/15 text-primary font-medium"
-                    : "hover:bg-accent text-foreground"
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <Select value={TRACKS[trackIndex].id} onValueChange={changeTrack}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TRACKS.map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">

@@ -260,6 +260,7 @@ const Index = () => {
               currentUserId={user?.id}
               isAdmin={isAdmin}
               isVisitor={isVisitor}
+              compact={chatOpen}
             />
           </main>
         </div>

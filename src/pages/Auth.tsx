@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import loginBg from "@/assets/login-bg.jpg";
+import logo from "@/assets/logo.png";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -89,20 +91,31 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-background p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+      {/* Blurred background image of the knowledge base */}
+      <div
+        className="absolute inset-0 bg-cover bg-center scale-110"
+        style={{ backgroundImage: `url(${loginBg})`, filter: "blur(8px) brightness(0.4)" }}
+        aria-hidden="true"
+      />
+      {/* Dark overlay for extra contrast */}
+      <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" aria-hidden="true" />
+
+      <Card className="relative w-full max-w-md shadow-2xl border-white/10 bg-card/80 backdrop-blur-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary">
-              <span className="text-3xl font-bold text-white">F</span>
-            </div>
+            <img
+              src={logo}
+              alt="Inside Automação"
+              className="h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,165,0,0.4)]"
+            />
           </div>
           <CardTitle className="text-3xl font-bold">
             {isLogin ? "Bem-vindo de volta" : "Criar conta"}
           </CardTitle>
           <CardDescription>
             {isLogin
-              ? "Entre com suas credenciais para acessar o FixCards"
+              ? "Entre com suas credenciais para acessar a Base de Conhecimento"
               : "Crie sua conta para começar a compartilhar soluções"}
           </CardDescription>
         </CardHeader>

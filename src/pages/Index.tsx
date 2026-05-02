@@ -239,14 +239,22 @@ const Index = () => {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2 max-w-2xl mx-auto">
-                <div className="flex-1">
+              <div className="flex items-center gap-2 max-w-2xl mx-auto flex-wrap justify-center">
+                <div className="flex-1 min-w-[220px]">
                   <SearchBar value={searchQuery} onChange={setSearchQuery} />
                 </div>
                 <CategoryFilterDropdown
                   selected={selectedCategory}
                   onSelect={setSelectedCategory}
                 />
+                {canCreate && (
+                  <PinCardsDialog
+                    cards={cards}
+                    pinned={pinned}
+                    max={maxPins}
+                    onToggle={togglePin}
+                  />
+                )}
               </div>
             </div>
 
@@ -259,6 +267,7 @@ const Index = () => {
               isAdmin={isAdmin}
               isVisitor={isVisitor}
               compact={chatOpen}
+              pinnedIds={pinned}
             />
           </main>
         </div>

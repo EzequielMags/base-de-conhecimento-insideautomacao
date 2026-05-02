@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Menu } from "lucide-react";
 import { useUserRole } from "@/hooks/use-user-role";
+import { PinCardsDialog } from "@/components/PinCardsDialog";
+import { usePinnedCards } from "@/hooks/use-pinned-cards";
 
 const Index = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -30,6 +32,7 @@ const Index = () => {
   const { toast } = useToast();
   const { user, isAdmin, isEditor, isVisitor, canCreate } = useUserRole();
   const { open: chatOpen } = useIntegriChat();
+  const { pinned, toggle: togglePin, max: maxPins } = usePinnedCards();
 
   useEffect(() => {
     loadCards();

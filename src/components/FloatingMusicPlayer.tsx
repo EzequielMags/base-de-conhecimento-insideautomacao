@@ -11,7 +11,7 @@ export const FloatingMusicPlayer = () => {
   if (location.pathname.startsWith("/auth")) return null;
 
   return (
-    <div className="fixed top-3 right-20 z-[60] flex items-center bg-card/80 backdrop-blur rounded-full border shadow-sm">
+    <div className="fixed bottom-4 right-4 z-[60] flex items-center bg-card/90 backdrop-blur rounded-full border shadow-lg">
       <BackgroundMusicPlayer />
     </div>
   );

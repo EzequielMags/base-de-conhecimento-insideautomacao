@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Eye, Play, User } from "lucide-react";
+import { Edit, Trash2, Eye, Play, User, Pin } from "lucide-react";
 import { Card as CardType } from "@/types/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,9 +16,10 @@ interface SolutionCardProps {
   onView: (card: CardType) => void;
   canEdit?: boolean;
   canDelete?: boolean;
+  isPinned?: boolean;
 }
 
-export const SolutionCard = ({ card, onEdit, onDelete, onView, canEdit = true, canDelete = true }: SolutionCardProps) => {
+export const SolutionCard = ({ card, onEdit, onDelete, onView, canEdit = true, canDelete = true, isPinned = false }: SolutionCardProps) => {
   const firstImage = card.files?.find(f => f.type.startsWith('image/'));
   const firstVideo = card.videos?.[0];
   const coverImage = (card as any).cover_image;
@@ -59,7 +60,15 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView, canEdit = true, c
         transition={{ duration: 0.3 }}
         whileHover={{ y: -4 }}
       >
-        <Card className="card-hover gradient-card overflow-hidden group">
+        <Card className={`card-hover gradient-card overflow-hidden group relative ${
+          isPinned ? "ring-2 ring-blue-500 shadow-[0_0_20px_-4px_rgba(59,130,246,0.6)]" : ""
+        }`}>
+          {isPinned && (
+            <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-lg">
+              <Pin className="h-3 w-3" />
+              Fixado
+            </div>
+          )}
           {/* Prioridade: 1. Capa personalizada, 2. Vídeo, 3. Primeira imagem */}
           {coverImage && !firstVideo && (
             <div 

@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Menu } from "lucide-react";
 import { useUserRole } from "@/hooks/use-user-role";
+import { PinCardsDialog } from "@/components/PinCardsDialog";
+import { usePinnedCards } from "@/hooks/use-pinned-cards";
 
 const Index = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -30,6 +32,7 @@ const Index = () => {
   const { toast } = useToast();
   const { user, isAdmin, isEditor, isVisitor, canCreate } = useUserRole();
   const { open: chatOpen } = useIntegriChat();
+  const { pinned, toggle: togglePin, max: maxPins } = usePinnedCards();
 
   useEffect(() => {
     loadCards();
@@ -218,11 +221,7 @@ const Index = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
 
-        <div
-          className={`flex-1 flex flex-col transition-all duration-300 ${
-            chatOpen ? "md:mr-[40vw]" : ""
-          }`}
-        >
+        <div className="flex-1 flex flex-col">
           <Header onNewCard={handleNewCard} canCreate={canCreate} />
 
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">
@@ -240,14 +239,22 @@ const Index = () => {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2 max-w-2xl mx-auto">
-                <div className="flex-1">
+              <div className="flex items-center gap-2 max-w-2xl mx-auto flex-wrap justify-center">
+                <div className="flex-1 min-w-[220px]">
                   <SearchBar value={searchQuery} onChange={setSearchQuery} />
                 </div>
                 <CategoryFilterDropdown
                   selected={selectedCategory}
                   onSelect={setSelectedCategory}
                 />
+                {canCreate && (
+                  <PinCardsDialog
+                    cards={cards}
+                    pinned={pinned}
+                    max={maxPins}
+                    onToggle={togglePin}
+                  />
+                )}
               </div>
             </div>
 
@@ -260,6 +267,7 @@ const Index = () => {
               isAdmin={isAdmin}
               isVisitor={isVisitor}
               compact={chatOpen}
+              pinnedIds={pinned}
             />
           </main>
         </div>

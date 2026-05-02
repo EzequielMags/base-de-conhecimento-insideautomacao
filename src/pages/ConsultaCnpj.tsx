@@ -2,7 +2,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { AppSidebar } from "@/components/AppSidebar";
-import { IntegriChatPanel } from "@/components/IntegriChatPanel";
 import { useIntegriChat } from "@/components/IntegriChatContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -187,7 +186,6 @@ const ConsultaCnpj = () => {
           </main>
         </div>
 
-        <IntegriChatPanel />
       </div>
     </SidebarProvider>
   );

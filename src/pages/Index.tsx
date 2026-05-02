@@ -9,7 +9,6 @@ import { CardDetail } from "@/components/CardDetail";
 import { AIAssistant } from "@/components/AIAssistant";
 import { PermissionsGuide } from "@/components/PermissionsGuide";
 import { AppSidebar } from "@/components/AppSidebar";
-import { IntegriChatPanel } from "@/components/IntegriChatPanel";
 import { useIntegriChat } from "@/components/IntegriChatContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card } from "@/types/card";
@@ -265,7 +264,6 @@ const Index = () => {
           </main>
         </div>
 
-        <IntegriChatPanel />
         <CardForm
           open={formOpen}
           onClose={() => {

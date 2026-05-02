@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import ConsultaCnpj from "./pages/ConsultaCnpj";
 import { HoverSoundEffect } from "./components/HoverSoundEffect";
 import { IntegriChatProvider } from "./components/IntegriChatContext";
+import { IntegriChatPanel } from "./components/IntegriChatPanel";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <IntegriChatPanel />
         </IntegriChatProvider>
       </BrowserRouter>
     </TooltipProvider>

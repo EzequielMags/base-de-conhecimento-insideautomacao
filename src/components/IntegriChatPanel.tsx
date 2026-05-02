@@ -2,6 +2,7 @@ import { useIntegriChat } from "./IntegriChatContext";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import integgriLogo from "@/assets/integgri-logo.png";
 
 export const IntegriChatPanel = () => {
   const { open, close } = useIntegriChat();
@@ -20,9 +21,7 @@ export const IntegriChatPanel = () => {
         >
           <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/40">
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded bg-primary/15 flex items-center justify-center text-primary font-bold text-sm">
-                I
-              </div>
+              <img src={integgriLogo} alt="Integgri" className="h-7 w-auto max-w-24 object-contain" />
               <span className="text-sm font-semibold">Integgri Chat</span>
             </div>
             <Button variant="ghost" size="icon" onClick={close} aria-label="Fechar Integgri Chat">

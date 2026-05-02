@@ -1,4 +1,4 @@
-import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2, MessageSquare } from "lucide-react";
+import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -12,6 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIntegriChat } from "@/components/IntegriChatContext";
+import integgriLogo from "@/assets/integgri-logo.png";
 
 interface NavSection {
   label: string;
@@ -72,7 +73,6 @@ export function AppSidebar() {
                 );
               })}
 
-              {/* Integgri Chat — toggle split screen */}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={toggleChat}
@@ -82,16 +82,11 @@ export function AppSidebar() {
                       : "hover:bg-accent"
                   }`}
                 >
-                  {/* Placeholder para a logo da Integgri — substitua o src quando tiver o asset */}
                   <img
-                    src="/placeholder.svg"
+                    src={integgriLogo}
                     alt="Integgri"
                     className={`h-4 w-4 object-contain ${isCollapsed ? "" : "mr-2"}`}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
                   />
-                  <MessageSquare className={`h-4 w-4 ${isCollapsed ? "" : "mr-2"} hidden`} />
                   {!isCollapsed && <span>Integgri Chat</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>

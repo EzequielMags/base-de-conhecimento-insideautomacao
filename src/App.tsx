@@ -17,6 +17,7 @@ import { HoverSoundEffect } from "./components/HoverSoundEffect";
 import { IntegriChatProvider } from "./components/IntegriChatContext";
 import { IntegriChatPanel } from "./components/IntegriChatPanel";
 import { AppShell } from "./components/AppShell";
+import { FloatingMusicPlayer } from "./components/FloatingMusicPlayer";
 import { PrivateRoute } from "./components/PrivateRoute";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             </Routes>
           </AppShell>
           <IntegriChatPanel />
+          <FloatingMusicPlayer />
         </IntegriChatProvider>
       </BrowserRouter>
     </TooltipProvider>

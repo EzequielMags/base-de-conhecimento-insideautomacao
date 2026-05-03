@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarCropDialog } from "@/components/AvatarCropDialog";
+import { Camera } from "lucide-react";
 
 type SettingsTab = "conta" | "usuarios";
 
@@ -21,10 +24,13 @@ interface ManagedUser {
   email: string | null;
   role: AppRole;
   pendingRole: AppRole;
+  avatar_url?: string | null;
 }
 
 const roleLabel = (r: AppRole) =>
   r === "admin" ? "ADMIN" : r === "user" ? "Editor" : "Visitante";
+
+const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -37,6 +43,11 @@ const Settings = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>("conta");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
 
@@ -44,10 +55,14 @@ const Settings = () => {
     const loadUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setUserId(user.id);
         setEmail(user.email || "");
-        const { data: profile } = await supabase
-          .from("profiles").select("name").eq("id", user.id).maybeSingle();
-        if (profile) setName(profile.name);
+        const { data: profile } = await (supabase as any)
+          .from("profiles").select("name, avatar_url").eq("id", user.id).maybeSingle();
+        if (profile) {
+          setName(profile.name);
+          setAvatarUrl(profile.avatar_url ?? null);
+        }
       }
     };
     loadUserData();
@@ -65,6 +80,7 @@ const Settings = () => {
         email: u.email,
         role: u.role as AppRole,
         pendingRole: u.role as AppRole,
+        avatar_url: u.avatar_url ?? null,
       }));
       setUsers(merged);
     } catch (e: any) {
@@ -140,6 +156,47 @@ const Settings = () => {
     navigate("/auth");
   };
 
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast({ title: "Formato inválido", description: "Envie JPG, PNG ou WEBP.", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveAvatar = async (blob: Blob) => {
+    if (!userId) return;
+    setUploadingAvatar(true);
+    try {
+      const path = `${userId}/avatar.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+      const { error: updErr } = await (supabase as any)
+        .from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
+      if (updErr) throw updErr;
+      setAvatarUrl(publicUrl);
+      setCropOpen(false);
+      setCropSrc(null);
+      toast({ title: "Avatar atualizado!", description: "Sua foto de perfil foi salva." });
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao enviar avatar.", variant: "destructive" });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const sidebarItems: { key: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { key: "conta", label: "Conta", icon: <User className="h-4 w-4" /> },
     ...(isAdmin ? [{ key: "usuarios" as SettingsTab, label: "Usuários", icon: <Users className="h-4 w-4" /> }] : []),
@@ -197,6 +254,34 @@ const Settings = () => {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Informações Pessoais</h3>
+
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 ring-2 ring-border">
+                      <AvatarImage src={avatarUrl || undefined} alt={name} />
+                      <AvatarFallback>{(name || email || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <label
+                      htmlFor="avatar-input"
+                      className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow hover:scale-105 transition"
+                      title="Alterar foto"
+                    >
+                      {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    </label>
+                    <input
+                      id="avatar-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      onChange={handleAvatarFile}
+                    />
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p className="font-medium text-foreground">Foto de Perfil</p>
+                    <p>JPG, PNG ou WEBP. Recorte 1:1.</p>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome</Label>
                   <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} disabled={loading} />
@@ -264,9 +349,15 @@ const Settings = () => {
                         {users.map((u) => (
                           <TableRow key={u.id}>
                             <TableCell>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-sm">{u.email || "—"}</span>
-                                <span className="text-xs text-muted-foreground">{u.name}</span>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-9 w-9 shrink-0">
+                                  <AvatarImage src={u.avatar_url || undefined} alt={u.name} />
+                                  <AvatarFallback>{(u.name || u.email || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="font-medium text-sm truncate">{u.email || "—"}</span>
+                                  <span className="text-xs text-muted-foreground truncate">{u.name}</span>
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -317,6 +408,13 @@ const Settings = () => {
           )}
         </div>
       </main>
+
+      <AvatarCropDialog
+        open={cropOpen}
+        imageSrc={cropSrc}
+        onClose={() => { setCropOpen(false); setCropSrc(null); }}
+        onSave={handleSaveAvatar}
+      />
     </div>
   );
 };

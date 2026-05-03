@@ -18,6 +18,7 @@ import { IntegriChatProvider } from "./components/IntegriChatContext";
 import { IntegriChatPanel } from "./components/IntegriChatPanel";
 import { AppShell } from "./components/AppShell";
 import { FloatingMusicPlayer } from "./components/FloatingMusicPlayer";
+import { PrivateRoute } from "./components/PrivateRoute";
 
 const queryClient = new QueryClient();
 
@@ -31,17 +32,17 @@ const App = () => (
         <IntegriChatProvider>
           <AppShell>
             <Routes>
-              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/pdfs-tecnicos" element={<PdfsTecnicos />} />
-              <Route path="/banco-lojas" element={<BancoLojas />} />
-              <Route path="/scripts" element={<Repository kind="scripts" />} />
-              <Route path="/skins" element={<Repository kind="skins" />} />
-              <Route path="/doclayouts" element={<Repository kind="doclayouts" />} />
-              <Route path="/impressoras" element={<Impressoras />} />
-              <Route path="/autopen" element={<Autopen />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/consulta-cnpj" element={<ConsultaCnpj />} />
+              <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
+              <Route path="/pdfs-tecnicos" element={<PrivateRoute><PdfsTecnicos /></PrivateRoute>} />
+              <Route path="/banco-lojas" element={<PrivateRoute><BancoLojas /></PrivateRoute>} />
+              <Route path="/scripts" element={<PrivateRoute><Repository kind="scripts" /></PrivateRoute>} />
+              <Route path="/skins" element={<PrivateRoute><Repository kind="skins" /></PrivateRoute>} />
+              <Route path="/doclayouts" element={<PrivateRoute><Repository kind="doclayouts" /></PrivateRoute>} />
+              <Route path="/impressoras" element={<PrivateRoute><Impressoras /></PrivateRoute>} />
+              <Route path="/autopen" element={<PrivateRoute><Autopen /></PrivateRoute>} />
+              <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+              <Route path="/consulta-cnpj" element={<PrivateRoute><ConsultaCnpj /></PrivateRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

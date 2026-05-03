@@ -169,3 +169,27 @@ All colors MUST be HSL.
 .animate-soundbar {
   animation: soundbar 0.5s ease-in-out infinite;
 }
+
+/* Animated wave background for mobile login */
+@keyframes auth-wave {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-25%) translateY(-2%); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+.auth-mobile-bg {
+  background:
+    radial-gradient(ellipse at 20% 30%, hsl(30 100% 50% / 0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, hsl(20 100% 45% / 0.30) 0%, transparent 55%),
+    linear-gradient(135deg, hsl(25 40% 8%) 0%, hsl(25 40% 4%) 100%);
+}
+
+.auth-wave-layer {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 30% 40%, hsl(30 100% 55% / 0.25), transparent 40%),
+    radial-gradient(circle at 70% 60%, hsl(15 100% 50% / 0.25), transparent 40%);
+  filter: blur(40px);
+  animation: auth-wave 12s ease-in-out infinite;
+}

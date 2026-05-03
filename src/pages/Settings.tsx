@@ -156,6 +156,47 @@ const Settings = () => {
     navigate("/auth");
   };
 
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast({ title: "Formato inválido", description: "Envie JPG, PNG ou WEBP.", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveAvatar = async (blob: Blob) => {
+    if (!userId) return;
+    setUploadingAvatar(true);
+    try {
+      const path = `${userId}/avatar.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+      const { error: updErr } = await (supabase as any)
+        .from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
+      if (updErr) throw updErr;
+      setAvatarUrl(publicUrl);
+      setCropOpen(false);
+      setCropSrc(null);
+      toast({ title: "Avatar atualizado!", description: "Sua foto de perfil foi salva." });
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message || "Falha ao enviar avatar.", variant: "destructive" });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const sidebarItems: { key: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { key: "conta", label: "Conta", icon: <User className="h-4 w-4" /> },
     ...(isAdmin ? [{ key: "usuarios" as SettingsTab, label: "Usuários", icon: <Users className="h-4 w-4" /> }] : []),

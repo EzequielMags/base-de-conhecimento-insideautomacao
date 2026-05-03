@@ -92,15 +92,23 @@ const Auth = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Blurred background image of the knowledge base */}
+      {/* Desktop: static background image with glassmorphism */}
       <div
-        className="absolute inset-0 bg-cover bg-center scale-110"
-        style={{ backgroundImage: `url(${loginBg})`, filter: "blur(8px) brightness(0.4)" }}
+        className="absolute inset-0 hidden md:block bg-cover bg-center"
+        style={{ backgroundImage: `url(${loginBg})` }}
         aria-hidden="true"
       />
-      {/* Dark overlay for extra contrast */}
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" aria-hidden="true" />
+      <div
+        className="absolute inset-0 hidden md:block"
+        style={{ backdropFilter: "blur(12px) brightness(0.6)", WebkitBackdropFilter: "blur(12px) brightness(0.6)", backgroundColor: "hsl(0 0% 0% / 0.3)" }}
+        aria-hidden="true"
+      />
 
+      {/* Mobile: animated wave gradient background */}
+      <div className="absolute inset-0 md:hidden auth-mobile-bg overflow-hidden" aria-hidden="true">
+        <div className="auth-wave-layer" />
+        <div className="auth-wave-layer" style={{ animationDelay: "-6s", animationDuration: "16s" }} />
+      </div>
       <Card className="relative w-full max-w-md shadow-2xl border-white/10 bg-card/80 backdrop-blur-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">

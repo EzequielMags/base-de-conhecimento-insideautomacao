@@ -254,6 +254,34 @@ const Settings = () => {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Informações Pessoais</h3>
+
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 ring-2 ring-border">
+                      <AvatarImage src={avatarUrl || undefined} alt={name} />
+                      <AvatarFallback>{(name || email || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <label
+                      htmlFor="avatar-input"
+                      className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow hover:scale-105 transition"
+                      title="Alterar foto"
+                    >
+                      {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    </label>
+                    <input
+                      id="avatar-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      onChange={handleAvatarFile}
+                    />
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p className="font-medium text-foreground">Foto de Perfil</p>
+                    <p>JPG, PNG ou WEBP. Recorte 1:1.</p>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome</Label>
                   <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} disabled={loading} />

@@ -280,6 +280,7 @@ export type Database = {
       admin_list_users: {
         Args: never
         Returns: {
+          avatar_url: string
           email: string
           id: string
           name: string

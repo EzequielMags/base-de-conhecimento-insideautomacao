@@ -94,8 +94,8 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
               Entrar
             </Button>
           )}
-          
-          
+
+          <div id="header-music-slot" className="flex items-center" />
 
           <Button
             variant="outline"

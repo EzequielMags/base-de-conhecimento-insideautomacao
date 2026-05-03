@@ -408,6 +408,13 @@ const Settings = () => {
           )}
         </div>
       </main>
+
+      <AvatarCropDialog
+        open={cropOpen}
+        imageSrc={cropSrc}
+        onClose={() => { setCropOpen(false); setCropSrc(null); }}
+        onSave={handleSaveAvatar}
+      />
     </div>
   );
 };

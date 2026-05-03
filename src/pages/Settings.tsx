@@ -349,9 +349,15 @@ const Settings = () => {
                         {users.map((u) => (
                           <TableRow key={u.id}>
                             <TableCell>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-sm">{u.email || "—"}</span>
-                                <span className="text-xs text-muted-foreground">{u.name}</span>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-9 w-9 shrink-0">
+                                  <AvatarImage src={u.avatar_url || undefined} alt={u.name} />
+                                  <AvatarFallback>{(u.name || u.email || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="font-medium text-sm truncate">{u.email || "—"}</span>
+                                  <span className="text-xs text-muted-foreground truncate">{u.name}</span>
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>

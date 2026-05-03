@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarCropDialog } from "@/components/AvatarCropDialog";
+import { Camera } from "lucide-react";
 
 type SettingsTab = "conta" | "usuarios";
 
@@ -21,10 +24,13 @@ interface ManagedUser {
   email: string | null;
   role: AppRole;
   pendingRole: AppRole;
+  avatar_url?: string | null;
 }
 
 const roleLabel = (r: AppRole) =>
   r === "admin" ? "ADMIN" : r === "user" ? "Editor" : "Visitante";
+
+const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -37,6 +43,11 @@ const Settings = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>("conta");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
 
@@ -44,10 +55,14 @@ const Settings = () => {
     const loadUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setUserId(user.id);
         setEmail(user.email || "");
         const { data: profile } = await supabase
-          .from("profiles").select("name").eq("id", user.id).maybeSingle();
-        if (profile) setName(profile.name);
+          .from("profiles").select("name, avatar_url").eq("id", user.id).maybeSingle();
+        if (profile) {
+          setName(profile.name);
+          setAvatarUrl((profile as any).avatar_url ?? null);
+        }
       }
     };
     loadUserData();
@@ -65,6 +80,7 @@ const Settings = () => {
         email: u.email,
         role: u.role as AppRole,
         pendingRole: u.role as AppRole,
+        avatar_url: u.avatar_url ?? null,
       }));
       setUsers(merged);
     } catch (e: any) {

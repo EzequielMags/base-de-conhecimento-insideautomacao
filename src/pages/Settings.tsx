@@ -57,11 +57,11 @@ const Settings = () => {
       if (user) {
         setUserId(user.id);
         setEmail(user.email || "");
-        const { data: profile } = await supabase
+        const { data: profile } = await (supabase as any)
           .from("profiles").select("name, avatar_url").eq("id", user.id).maybeSingle();
         if (profile) {
           setName(profile.name);
-          setAvatarUrl((profile as any).avatar_url ?? null);
+          setAvatarUrl(profile.avatar_url ?? null);
         }
       }
     };

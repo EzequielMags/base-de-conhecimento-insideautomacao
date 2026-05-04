@@ -155,6 +155,9 @@ export type Database = {
           file_url: string
           id: string
           name: string
+          observation: string | null
+          preview_path: string | null
+          preview_url: string | null
           repository: string
           user_id: string | null
         }
@@ -166,6 +169,9 @@ export type Database = {
           file_url: string
           id?: string
           name: string
+          observation?: string | null
+          preview_path?: string | null
+          preview_url?: string | null
           repository: string
           user_id?: string | null
         }
@@ -177,6 +183,9 @@ export type Database = {
           file_url?: string
           id?: string
           name?: string
+          observation?: string | null
+          preview_path?: string | null
+          preview_url?: string | null
           repository?: string
           user_id?: string | null
         }

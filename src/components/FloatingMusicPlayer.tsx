@@ -13,7 +13,7 @@ export const FloatingMusicPlayer = () => {
 
   return (
     <div
-      className="fixed top-3 right-[7.5rem] z-[60] flex items-center bg-card/90 backdrop-blur rounded-full border shadow-md"
+      className="fixed bottom-5 right-5 z-[60] flex items-center bg-card/95 backdrop-blur rounded-full border shadow-lg"
       style={{ display: isAuth ? "none" : undefined }}
     >
       <BackgroundMusicPlayer />

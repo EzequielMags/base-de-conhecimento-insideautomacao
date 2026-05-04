@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pin, PinOff, Search } from "lucide-react";
+import { Pin, Check, Search, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,13 @@ export const PinCardsDialog = ({ cards, pinned, max, onToggle }: Props) => {
     }
   };
 
+  const getCover = (c: CardType): string | null => {
+    const anyC = c as any;
+    if (anyC.cover_image) return anyC.cover_image;
+    if (c.images && c.images.length) return c.images[0];
+    return null;
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -39,12 +46,12 @@ export const PinCardsDialog = ({ cards, pinned, max, onToggle }: Props) => {
           Fixar ({pinned.length}/{max})
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Fixar cards no topo</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-3 flex-1 min-h-0 flex flex-col">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -56,37 +63,61 @@ export const PinCardsDialog = ({ cards, pinned, max, onToggle }: Props) => {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Selecione até <strong>{max}</strong> cards. Eles aparecerão destacados no topo da lista.
+            Selecione até <strong>{max}</strong> cards. Os selecionados ocupam <strong>{pinned.length}/{max}</strong> slots.
           </p>
 
-          <div className="max-h-[50vh] overflow-y-auto space-y-2 pr-1">
-            {filtered.map((card) => {
-              const isPinned = pinned.includes(card.id);
-              return (
-                <button
-                  type="button"
-                  key={card.id}
-                  onClick={() => handleToggle(card.id)}
-                  className={`w-full flex items-center justify-between gap-3 p-3 rounded-lg border text-left transition-all ${
-                    isPinned
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "hover:bg-accent border-border"
-                  }`}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{card.title}</p>
-                    <Badge variant="secondary" className="mt-1 text-xs">{card.category}</Badge>
-                  </div>
-                  {isPinned ? (
-                    <PinOff className="h-4 w-4 text-blue-500 shrink-0" />
-                  ) : (
-                    <Pin className="h-4 w-4 text-muted-foreground shrink-0" />
-                  )}
-                </button>
-              );
-            })}
+          <div className="overflow-y-auto pr-1 flex-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {filtered.map((card) => {
+                const isPinned = pinned.includes(card.id);
+                const cover = getCover(card);
+                return (
+                  <button
+                    type="button"
+                    key={card.id}
+                    onClick={() => handleToggle(card.id)}
+                    className={`group relative flex flex-col rounded-lg border-2 overflow-hidden text-left transition-all hover:shadow-md ${
+                      isPinned
+                        ? "border-primary bg-primary/10 shadow-[0_0_0_3px_hsl(var(--primary)/0.15)]"
+                        : "border-border hover:border-primary/40 bg-card"
+                    }`}
+                  >
+                    <div className="relative aspect-video w-full bg-muted overflow-hidden">
+                      {cover ? (
+                        <img
+                          src={cover}
+                          alt={card.title}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <ImageIcon className="h-8 w-8" />
+                        </div>
+                      )}
+                      {isPinned && (
+                        <span className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow">
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5 space-y-1.5">
+                      <p
+                        className="text-sm font-semibold leading-tight line-clamp-2 break-words"
+                        title={card.title}
+                      >
+                        {card.title}
+                      </p>
+                      <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
+                        {card.category}
+                      </Badge>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
             {filtered.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-6">Nenhum card encontrado.</p>
+              <p className="text-center text-sm text-muted-foreground py-10">Nenhum card encontrado.</p>
             )}
           </div>
         </div>

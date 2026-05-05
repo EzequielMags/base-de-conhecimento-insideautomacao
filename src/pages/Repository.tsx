@@ -470,10 +470,10 @@ export const Repository = ({ kind }: RepositoryProps) => {
             </div>
             {hasPreviews && (
               <div>
-                <Label>Imagens ilustrativas (até {MAX_PREVIEWS} — PNG, JPG, WEBP)</Label>
+                <Label>Imagens ilustrativas (até {MAX_PREVIEWS}{kind === "doclayouts" ? " — PNG, JPG, WEBP, PDF" : " — PNG, JPG, WEBP"})</Label>
                 <Input
                   type="file"
-                  accept={PREVIEW_ACCEPT}
+                  accept={kind === "doclayouts" ? PREVIEW_ACCEPT_DOCLAYOUTS : PREVIEW_ACCEPT_IMAGES}
                   multiple
                   onChange={(e) => {
                     const list = Array.from(e.target.files || []).slice(0, MAX_PREVIEWS);

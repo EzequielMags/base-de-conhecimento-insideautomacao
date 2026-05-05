@@ -10,6 +10,7 @@ const TRACKS = [
   { id: "track1", label: "Ambient Foco", videoId: "EUIOgd_CNl4" },
   { id: "track2", label: "Chill Synth", videoId: "qmbAxI2wsAU" },
   { id: "track3", label: "Lo-Fi Vibe", videoId: "EUIOgd_CNl4" },
+  { id: "track4", label: "Tiësto - The Business", videoId: "4x2S3LhbM0k" },
 ];
 
 declare global {

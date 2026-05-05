@@ -19,6 +19,15 @@ import {
   Home,
   Building,
   Mailbox,
+  Activity,
+  Calendar,
+  Phone,
+  Mail,
+  DollarSign,
+  Users,
+  Globe,
+  Briefcase,
+  Landmark,
 } from "lucide-react";
 
 const formatCnpj = (value: string) => {
@@ -35,11 +44,27 @@ interface CnpjData {
   nome_fantasia?: string;
   cep?: string;
   logradouro?: string;
+  numero?: string;
   bairro?: string;
   complemento?: string;
   municipio?: string;
   uf?: string;
   cnpj?: string;
+  ddd_telefone_1?: string;
+  ddd_telefone_2?: string;
+  email?: string;
+  capital_social?: number;
+  porte?: { descricao?: string } | string;
+  descricao_porte?: string;
+  natureza_juridica?: string;
+  descricao_situacao_cadastral?: string;
+  situacao_cadastral?: string | number;
+  data_situacao_cadastral?: string;
+  data_inicio_atividade?: string;
+  cnae_fiscal?: number;
+  cnae_fiscal_descricao?: string;
+  cnaes_secundarios?: Array<{ codigo?: number; descricao?: string }>;
+  qsa?: Array<{ nome_socio?: string; qualificacao_socio?: string }>;
   inscricoes_estaduais?: Array<{ inscricao_estadual?: string; ativo?: boolean; estado?: string }>;
 }
 
@@ -79,15 +104,41 @@ const ConsultaCnpj = () => {
     data?.inscricoes_estaduais?.[0]?.inscricao_estadual ||
     "—";
 
+  const fmtMoney = (v?: number) =>
+    typeof v === "number"
+      ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+      : "—";
+  const fmtDate = (s?: string) => {
+    if (!s) return "—";
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? s : d.toLocaleDateString("pt-BR");
+  };
+  const porte =
+    (typeof data?.porte === "object" ? data?.porte?.descricao : data?.porte) ||
+    data?.descricao_porte ||
+    "—";
+
   const fields = data
     ? [
-        { icon: Building2, label: "Nome Empresarial (Razão Social)", value: data.razao_social || "—" },
+        { icon: Building2, label: "Razão Social", value: data.razao_social || "—" },
         { icon: Building, label: "Nome Fantasia", value: data.nome_fantasia || "—" },
+        { icon: Hash, label: "CNPJ", value: data.cnpj ? formatCnpj(data.cnpj) : "—" },
         { icon: FileBadge, label: "Inscrição Estadual (IE)", value: ie },
+        { icon: Activity, label: "Situação Cadastral", value: data.descricao_situacao_cadastral || String(data.situacao_cadastral ?? "—") },
+        { icon: Calendar, label: "Data da Situação", value: fmtDate(data.data_situacao_cadastral) },
+        { icon: Calendar, label: "Início de Atividade", value: fmtDate(data.data_inicio_atividade) },
+        { icon: Briefcase, label: "CNAE Principal", value: data.cnae_fiscal ? `${data.cnae_fiscal} — ${data.cnae_fiscal_descricao || ""}` : "—" },
+        { icon: Landmark, label: "Natureza Jurídica", value: data.natureza_juridica || "—" },
+        { icon: Users, label: "Porte", value: porte },
+        { icon: DollarSign, label: "Capital Social", value: fmtMoney(data.capital_social) },
         { icon: Mailbox, label: "CEP", value: data.cep || "—" },
-        { icon: Home, label: "Logradouro", value: data.logradouro || "—" },
+        { icon: Home, label: "Logradouro", value: [data.logradouro, data.numero].filter(Boolean).join(", ") || "—" },
         { icon: MapPin, label: "Bairro", value: data.bairro || "—" },
+        { icon: Globe, label: "Município/UF", value: data.municipio ? `${data.municipio}/${data.uf || ""}` : "—" },
         { icon: Hash, label: "Complemento", value: data.complemento || "—" },
+        { icon: Phone, label: "Telefone", value: data.ddd_telefone_1 || "—" },
+        { icon: Phone, label: "Telefone 2", value: data.ddd_telefone_2 || "—" },
+        { icon: Mail, label: "E-mail", value: data.email || "—" },
       ]
     : [];
 
@@ -182,6 +233,49 @@ const ConsultaCnpj = () => {
                   })}
                 </motion.div>
               )}
+
+              {data && (data.cnaes_secundarios?.length || data.qsa?.length) ? (
+                <motion.div
+                  key="extra"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="grid gap-4 mt-4"
+                >
+                  {data.cnaes_secundarios && data.cnaes_secundarios.length > 0 && (
+                    <Card className="border-border/60 bg-card/80">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Briefcase className="h-4 w-4 text-primary" /> CNAEs Secundários
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1 text-sm max-h-60 overflow-y-auto">
+                        {data.cnaes_secundarios.map((c, i) => (
+                          <p key={i} className="break-words">
+                            <span className="font-mono text-xs text-muted-foreground">{c.codigo}</span> — {c.descricao}
+                          </p>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                  {data.qsa && data.qsa.length > 0 && (
+                    <Card className="border-border/60 bg-card/80">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Users className="h-4 w-4 text-primary" /> Quadro Societário
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1 text-sm max-h-60 overflow-y-auto">
+                        {data.qsa.map((s, i) => (
+                          <p key={i} className="break-words">
+                            <span className="font-medium">{s.nome_socio}</span>
+                            {s.qualificacao_socio ? ` — ${s.qualificacao_socio}` : ""}
+                          </p>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </motion.div>
+              ) : null}
             </AnimatePresence>
           </main>
         </div>

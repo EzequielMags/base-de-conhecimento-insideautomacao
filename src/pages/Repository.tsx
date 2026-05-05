@@ -597,7 +597,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
                 {editKeepUrls.length < MAX_PREVIEWS && (
                   <Input
                     type="file"
-                    accept={PREVIEW_ACCEPT}
+                    accept={kind === "doclayouts" ? PREVIEW_ACCEPT_DOCLAYOUTS : PREVIEW_ACCEPT_IMAGES}
                     multiple
                     onChange={(e) => {
                       const slots = MAX_PREVIEWS - editKeepUrls.length;

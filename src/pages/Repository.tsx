@@ -29,6 +29,7 @@ import {
   Info,
   Pencil,
   ImageIcon,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatFileSize, downloadFile } from "@/utils/fileUpload";
@@ -78,7 +79,8 @@ const CONFIGS: Record<RepositoryKind, RepositoryConfig> = {
 };
 
 const PREVIEW_BUCKET = "doclayouts-previews";
-const PREVIEW_ACCEPT = "image/png,image/jpeg,image/jpg,image/webp,application/pdf";
+const PREVIEW_ACCEPT = "image/png,image/jpeg,image/jpg,image/webp";
+const MAX_PREVIEWS = 3;
 
 interface RepositoryFile {
   id: string;
@@ -92,6 +94,8 @@ interface RepositoryFile {
   observation?: string | null;
   preview_url?: string | null;
   preview_path?: string | null;
+  preview_urls?: string[] | null;
+  preview_paths?: string[] | null;
 }
 
 interface RepositoryProps {
@@ -100,7 +104,8 @@ interface RepositoryProps {
 
 export const Repository = ({ kind }: RepositoryProps) => {
   const config = CONFIGS[kind];
-  const isDoclayouts = kind === "doclayouts";
+  const hasInfo = true; // all three now have info
+  const hasPreviews = kind === "skins" || kind === "doclayouts"; // images supported
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isAdmin, canCreate } = useUserRole();
@@ -109,11 +114,11 @@ export const Repository = ({ kind }: RepositoryProps) => {
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Doclayouts upload dialog
+  // Upload dialog (with observation + optional previews)
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [observation, setObservation] = useState("");
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewFiles, setPreviewFiles] = useState<File[]>([]);
 
   // Info dialog
   const [infoFile, setInfoFile] = useState<RepositoryFile | null>(null);
@@ -121,9 +126,21 @@ export const Repository = ({ kind }: RepositoryProps) => {
   // Edit dialog
   const [editFile, setEditFile] = useState<RepositoryFile | null>(null);
   const [editObservation, setEditObservation] = useState("");
-  const [editPreviewFile, setEditPreviewFile] = useState<File | null>(null);
-  const [editRemovePreview, setEditRemovePreview] = useState(false);
+  const [editNewPreviews, setEditNewPreviews] = useState<File[]>([]);
+  const [editKeepUrls, setEditKeepUrls] = useState<string[]>([]);
+  const [editKeepPaths, setEditKeepPaths] = useState<string[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const allPreviews = (f: RepositoryFile | null) => {
+    if (!f) return [] as { url: string; path: string | null }[];
+    const arr: { url: string; path: string | null }[] = [];
+    if (f.preview_urls && f.preview_urls.length > 0) {
+      f.preview_urls.forEach((u, i) => arr.push({ url: u, path: f.preview_paths?.[i] ?? null }));
+    } else if (f.preview_url) {
+      arr.push({ url: f.preview_url, path: f.preview_path ?? null });
+    }
+    return arr;
+  };
 
   const load = async () => {
     setLoading(true);
@@ -152,7 +169,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
 
   const uploadPreview = async (file: File): Promise<{ url: string; path: string }> => {
     const safe = sanitize(file.name);
-    const path = `${user!.id}/${Date.now()}-${safe}`;
+    const path = `${user!.id}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${safe}`;
     const { error } = await supabase.storage.from(PREVIEW_BUCKET).upload(path, file, {
       cacheControl: "3600",
       upsert: false,
@@ -162,61 +179,8 @@ export const Repository = ({ kind }: RepositoryProps) => {
     return { url: publicUrl, path };
   };
 
-  // Standard (non-doclayouts) multi upload
-  const handleUploadStandard = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const list = e.target.files;
-    if (!list || list.length === 0) return;
-    if (!user) {
-      toast({ title: "Login necessário", variant: "destructive" });
-      return;
-    }
-    if (!canCreate) {
-      toast({ title: "Sem permissão", variant: "destructive" });
-      return;
-    }
-    setUploading(true);
-    try {
-      for (const file of Array.from(list)) {
-        if (!validExt(file.name)) {
-          toast({
-            title: "Formato inválido",
-            description: `${file.name} — permitido: ${config.extensions.join(", ")}`,
-            variant: "destructive",
-          });
-          continue;
-        }
-        const safe = sanitize(file.name);
-        const path = `${user.id}/${Date.now()}-${safe}`;
-        const { error: upErr } = await supabase.storage.from(config.bucket).upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-        if (upErr) throw upErr;
-        const { data: { publicUrl } } = supabase.storage.from(config.bucket).getPublicUrl(path);
-        const { error: insErr } = await supabase.from("repository_files").insert({
-          repository: kind,
-          user_id: user.id,
-          name: file.name,
-          file_url: publicUrl,
-          file_path: path,
-          file_size: file.size,
-          file_type: file.type || file.name.split(".").pop() || "",
-        });
-        if (insErr) throw insErr;
-      }
-      toast({ title: "Upload concluído!" });
-      await load();
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Erro", description: "Falha ao enviar arquivo.", variant: "destructive" });
-    } finally {
-      setUploading(false);
-      e.target.value = "";
-    }
-  };
-
-  // Doclayouts: open dialog with single file
-  const handlePickDoclayout = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Open upload dialog with selected file
+  const handlePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
@@ -230,11 +194,11 @@ export const Repository = ({ kind }: RepositoryProps) => {
     }
     setPendingFile(f);
     setObservation("");
-    setPreviewFile(null);
+    setPreviewFiles([]);
     setUploadOpen(true);
   };
 
-  const submitDoclayout = async () => {
+  const submitUpload = async () => {
     if (!pendingFile || !user) return;
     setUploading(true);
     try {
@@ -246,8 +210,12 @@ export const Repository = ({ kind }: RepositoryProps) => {
       if (upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from(config.bucket).getPublicUrl(path);
 
-      let preview: { url: string; path: string } | null = null;
-      if (previewFile) preview = await uploadPreview(previewFile);
+      const previews: { url: string; path: string }[] = [];
+      if (hasPreviews) {
+        for (const pf of previewFiles.slice(0, MAX_PREVIEWS)) {
+          previews.push(await uploadPreview(pf));
+        }
+      }
 
       const { error: insErr } = await supabase.from("repository_files").insert({
         repository: kind,
@@ -258,8 +226,8 @@ export const Repository = ({ kind }: RepositoryProps) => {
         file_size: pendingFile.size,
         file_type: pendingFile.type || pendingFile.name.split(".").pop() || "",
         observation: observation.trim() || null,
-        preview_url: preview?.url ?? null,
-        preview_path: preview?.path ?? null,
+        preview_urls: previews.map((p) => p.url),
+        preview_paths: previews.map((p) => p.path),
       } as any);
       if (insErr) throw insErr;
 
@@ -267,7 +235,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
       setUploadOpen(false);
       setPendingFile(null);
       setObservation("");
-      setPreviewFile(null);
+      setPreviewFiles([]);
       await load();
     } catch (err) {
       console.error(err);
@@ -278,16 +246,17 @@ export const Repository = ({ kind }: RepositoryProps) => {
   };
 
   const handleDelete = async (file: RepositoryFile) => {
-    if (!isAdmin && file.user_id !== user?.id) {
-      toast({ title: "Sem permissão", variant: "destructive" });
+    if (!isAdmin) {
+      toast({ title: "Sem permissão", description: "Apenas administradores podem excluir.", variant: "destructive" });
       return;
     }
     if (!confirm(`Excluir "${file.name}"?`)) return;
     try {
       await supabase.storage.from(config.bucket).remove([file.file_path]);
-      if (file.preview_path) {
-        await supabase.storage.from(PREVIEW_BUCKET).remove([file.preview_path]);
-      }
+      const paths = (file.preview_paths && file.preview_paths.length > 0)
+        ? file.preview_paths
+        : file.preview_path ? [file.preview_path] : [];
+      if (paths.length > 0) await supabase.storage.from(PREVIEW_BUCKET).remove(paths);
       const { error } = await supabase.from("repository_files").delete().eq("id", file.id);
       if (error) throw error;
       toast({ title: "Excluído!" });
@@ -301,39 +270,46 @@ export const Repository = ({ kind }: RepositoryProps) => {
   const openEdit = (file: RepositoryFile) => {
     setEditFile(file);
     setEditObservation(file.observation || "");
-    setEditPreviewFile(null);
-    setEditRemovePreview(false);
+    setEditNewPreviews([]);
+    const cur = allPreviews(file);
+    setEditKeepUrls(cur.map((c) => c.url));
+    setEditKeepPaths(cur.map((c) => c.path || ""));
   };
 
   const saveEdit = async () => {
     if (!editFile) return;
     setSavingEdit(true);
     try {
-      let preview_url = editFile.preview_url ?? null;
-      let preview_path = editFile.preview_path ?? null;
-
-      if (editRemovePreview && editFile.preview_path) {
-        await supabase.storage.from(PREVIEW_BUCKET).remove([editFile.preview_path]);
-        preview_url = null;
-        preview_path = null;
+      const cur = allPreviews(editFile);
+      // Remove from storage any preview that was dropped
+      const removedPaths = cur
+        .filter((c) => c.path && !editKeepPaths.includes(c.path))
+        .map((c) => c.path!) as string[];
+      if (removedPaths.length > 0) {
+        await supabase.storage.from(PREVIEW_BUCKET).remove(removedPaths);
       }
 
-      if (editPreviewFile) {
-        // delete previous if any
-        if (preview_path) {
-          await supabase.storage.from(PREVIEW_BUCKET).remove([preview_path]);
+      let urls = [...editKeepUrls];
+      let paths = [...editKeepPaths];
+
+      if (hasPreviews) {
+        const slots = MAX_PREVIEWS - urls.length;
+        for (const pf of editNewPreviews.slice(0, Math.max(0, slots))) {
+          const up = await uploadPreview(pf);
+          urls.push(up.url);
+          paths.push(up.path);
         }
-        const uploaded = await uploadPreview(editPreviewFile);
-        preview_url = uploaded.url;
-        preview_path = uploaded.path;
       }
 
       const { error } = await supabase
         .from("repository_files")
         .update({
           observation: editObservation.trim() || null,
-          preview_url,
-          preview_path,
+          preview_urls: urls,
+          preview_paths: paths,
+          // legacy fields cleared
+          preview_url: null,
+          preview_path: null,
         } as any)
         .eq("id", editFile.id);
       if (error) throw error;
@@ -396,8 +372,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
                     <input
                       type="file"
                       accept={config.accept}
-                      multiple={!isDoclayouts}
-                      onChange={isDoclayouts ? handlePickDoclayout : handleUploadStandard}
+                      onChange={handlePick}
                       className="hidden"
                       disabled={uploading}
                     />
@@ -418,7 +393,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
                 {filtered.map((f) => (
                   <motion.div key={f.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                     <Card className="relative hover:shadow-lg transition-all hover:-translate-y-1">
-                      {isDoclayouts && (
+                      {hasInfo && (
                         <button
                           type="button"
                           onClick={() => setInfoFile(f)}
@@ -447,12 +422,12 @@ export const Repository = ({ kind }: RepositoryProps) => {
                           <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => downloadFile(f.file_url, f.name)}>
                             <Download className="h-4 w-4" /> Baixar
                           </Button>
-                          {isDoclayouts && canEditFile(f) && (
+                          {canEditFile(f) && (
                             <Button size="sm" variant="outline" onClick={() => openEdit(f)} title="Editar">
                               <Pencil className="h-4 w-4" />
                             </Button>
                           )}
-                          {(isAdmin || f.user_id === user?.id) && (
+                          {isAdmin && (
                             <Button size="sm" variant="destructive" onClick={() => handleDelete(f)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -469,13 +444,13 @@ export const Repository = ({ kind }: RepositoryProps) => {
         <PermissionsGuide />
       </div>
 
-      {/* Doclayout upload dialog */}
+      {/* Upload dialog */}
       <Dialog open={uploadOpen} onOpenChange={(o) => !uploading && setUploadOpen(o)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Enviar Doclayout</DialogTitle>
+            <DialogTitle>Enviar {config.title}</DialogTitle>
             <DialogDescription>
-              {pendingFile?.name} — adicione uma observação e, se quiser, uma imagem do layout em execução.
+              {pendingFile?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -489,25 +464,35 @@ export const Repository = ({ kind }: RepositoryProps) => {
                 rows={4}
               />
             </div>
-            <div>
-              <Label>Imagem ilustrativa (PNG, JPG, WEBP ou PDF)</Label>
-              <Input
-                type="file"
-                accept={PREVIEW_ACCEPT}
-                onChange={(e) => setPreviewFile(e.target.files?.[0] ?? null)}
-              />
-              {previewFile && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Selecionado: {previewFile.name}
-                </p>
-              )}
-            </div>
+            {hasPreviews && (
+              <div>
+                <Label>Imagens ilustrativas (até {MAX_PREVIEWS} — PNG, JPG, WEBP)</Label>
+                <Input
+                  type="file"
+                  accept={PREVIEW_ACCEPT}
+                  multiple
+                  onChange={(e) => {
+                    const list = Array.from(e.target.files || []).slice(0, MAX_PREVIEWS);
+                    setPreviewFiles(list);
+                  }}
+                />
+                {previewFiles.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {previewFiles.map((p, i) => (
+                      <div key={i} className="text-xs px-2 py-1 rounded bg-muted">
+                        {p.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setUploadOpen(false)} disabled={uploading}>
               Cancelar
             </Button>
-            <Button onClick={submitDoclayout} disabled={uploading} className="gap-2">
+            <Button onClick={submitUpload} disabled={uploading} className="gap-2">
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               Enviar
             </Button>
@@ -520,7 +505,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="break-all">{infoFile?.name}</DialogTitle>
-            <DialogDescription>Informações e observações deste layout.</DialogDescription>
+            <DialogDescription>Informações e observações deste arquivo.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -529,27 +514,26 @@ export const Repository = ({ kind }: RepositoryProps) => {
                 {infoFile?.observation?.trim() || "Sem observação cadastrada."}
               </p>
             </div>
-            {infoFile?.preview_url ? (
-              <div>
-                <Label className="text-xs text-muted-foreground">Imagem na prática</Label>
-                {infoFile.preview_url.toLowerCase().endsWith(".pdf") ? (
-                  <iframe
-                    src={infoFile.preview_url}
-                    className="w-full h-[60vh] mt-2 rounded border"
-                    title="Preview PDF"
-                  />
-                ) : (
-                  <img
-                    src={infoFile.preview_url}
-                    alt={`Preview de ${infoFile.name}`}
-                    className="mt-2 w-full rounded border object-contain max-h-[60vh] bg-muted"
-                  />
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <ImageIcon className="h-4 w-4" /> Nenhuma imagem ilustrativa.
-              </div>
+            {hasPreviews && (
+              allPreviews(infoFile).length > 0 ? (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Imagens na prática</Label>
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {allPreviews(infoFile).map((p, i) => (
+                      <img
+                        key={i}
+                        src={p.url}
+                        alt={`Preview ${i + 1}`}
+                        className="w-full rounded border object-contain max-h-80 bg-muted"
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <ImageIcon className="h-4 w-4" /> Nenhuma imagem ilustrativa.
+                </div>
+              )
             )}
           </div>
           <DialogFooter>
@@ -570,7 +554,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
       <Dialog open={!!editFile} onOpenChange={(o) => !o && !savingEdit && setEditFile(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Editar layout</DialogTitle>
+            <DialogTitle>Editar arquivo</DialogTitle>
             <DialogDescription className="break-all">{editFile?.name}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -583,34 +567,48 @@ export const Repository = ({ kind }: RepositoryProps) => {
                 rows={4}
               />
             </div>
-            <div>
-              <Label>Substituir imagem ilustrativa</Label>
-              <Input
-                type="file"
-                accept={PREVIEW_ACCEPT}
-                onChange={(e) => setEditPreviewFile(e.target.files?.[0] ?? null)}
-              />
-              {editFile?.preview_url && !editPreviewFile && !editRemovePreview && (
-                <div className="mt-2 flex items-center gap-2">
-                  <img
-                    src={editFile.preview_url}
-                    alt="Atual"
-                    className="h-16 w-16 object-cover rounded border"
+            {hasPreviews && (
+              <div className="space-y-2">
+                <Label>Imagens (até {MAX_PREVIEWS})</Label>
+                {editKeepUrls.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {editKeepUrls.map((u, i) => (
+                      <div key={u} className="relative">
+                        <img src={u} alt="" className="h-20 w-20 object-cover rounded border" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditKeepUrls(editKeepUrls.filter((_, idx) => idx !== i));
+                            setEditKeepPaths(editKeepPaths.filter((_, idx) => idx !== i));
+                          }}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center"
+                          title="Remover"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {editKeepUrls.length < MAX_PREVIEWS && (
+                  <Input
+                    type="file"
+                    accept={PREVIEW_ACCEPT}
+                    multiple
+                    onChange={(e) => {
+                      const slots = MAX_PREVIEWS - editKeepUrls.length;
+                      const list = Array.from(e.target.files || []).slice(0, slots);
+                      setEditNewPreviews(list);
+                    }}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditRemovePreview(true)}
-                  >
-                    Remover atual
-                  </Button>
-                </div>
-              )}
-              {editRemovePreview && (
-                <p className="text-xs text-destructive mt-1">A imagem atual será removida ao salvar.</p>
-              )}
-            </div>
+                )}
+                {editNewPreviews.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    +{editNewPreviews.length} nova(s) imagem(ns) ao salvar
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditFile(null)} disabled={savingEdit}>

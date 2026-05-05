@@ -650,6 +650,13 @@ export const Repository = ({ kind }: RepositoryProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PreviewLightbox
+        items={allPreviews(infoFile).map((p) => ({ url: p.url, type: isPdf(p.url) ? "pdf" : "image" }))}
+        index={lightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+        onIndexChange={setLightboxIndex}
+      />
     </SidebarProvider>
   );
 };

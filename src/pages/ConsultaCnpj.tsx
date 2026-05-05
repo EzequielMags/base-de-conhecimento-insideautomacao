@@ -19,6 +19,15 @@ import {
   Home,
   Building,
   Mailbox,
+  Activity,
+  Calendar,
+  Phone,
+  Mail,
+  DollarSign,
+  Users,
+  Globe,
+  Briefcase,
+  Landmark,
 } from "lucide-react";
 
 const formatCnpj = (value: string) => {

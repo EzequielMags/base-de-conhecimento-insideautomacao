@@ -157,7 +157,9 @@ export type Database = {
           name: string
           observation: string | null
           preview_path: string | null
+          preview_paths: string[] | null
           preview_url: string | null
+          preview_urls: string[] | null
           repository: string
           user_id: string | null
         }
@@ -171,7 +173,9 @@ export type Database = {
           name: string
           observation?: string | null
           preview_path?: string | null
+          preview_paths?: string[] | null
           preview_url?: string | null
+          preview_urls?: string[] | null
           repository: string
           user_id?: string | null
         }
@@ -185,7 +189,9 @@ export type Database = {
           name?: string
           observation?: string | null
           preview_path?: string | null
+          preview_paths?: string[] | null
           preview_url?: string | null
+          preview_urls?: string[] | null
           repository?: string
           user_id?: string | null
         }

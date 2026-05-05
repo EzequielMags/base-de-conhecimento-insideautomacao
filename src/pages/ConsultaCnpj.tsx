@@ -233,6 +233,49 @@ const ConsultaCnpj = () => {
                   })}
                 </motion.div>
               )}
+
+              {data && (data.cnaes_secundarios?.length || data.qsa?.length) ? (
+                <motion.div
+                  key="extra"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="grid gap-4 mt-4"
+                >
+                  {data.cnaes_secundarios && data.cnaes_secundarios.length > 0 && (
+                    <Card className="border-border/60 bg-card/80">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Briefcase className="h-4 w-4 text-primary" /> CNAEs Secundários
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1 text-sm max-h-60 overflow-y-auto">
+                        {data.cnaes_secundarios.map((c, i) => (
+                          <p key={i} className="break-words">
+                            <span className="font-mono text-xs text-muted-foreground">{c.codigo}</span> — {c.descricao}
+                          </p>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                  {data.qsa && data.qsa.length > 0 && (
+                    <Card className="border-border/60 bg-card/80">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Users className="h-4 w-4 text-primary" /> Quadro Societário
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1 text-sm max-h-60 overflow-y-auto">
+                        {data.qsa.map((s, i) => (
+                          <p key={i} className="break-words">
+                            <span className="font-medium">{s.nome_socio}</span>
+                            {s.qualificacao_socio ? ` — ${s.qualificacao_socio}` : ""}
+                          </p>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </motion.div>
+              ) : null}
             </AnimatePresence>
           </main>
         </div>

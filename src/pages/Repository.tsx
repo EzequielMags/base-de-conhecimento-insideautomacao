@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { PreviewLightbox } from "@/components/PreviewLightbox";
+import { FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -79,8 +81,10 @@ const CONFIGS: Record<RepositoryKind, RepositoryConfig> = {
 };
 
 const PREVIEW_BUCKET = "doclayouts-previews";
-const PREVIEW_ACCEPT = "image/png,image/jpeg,image/jpg,image/webp";
+const PREVIEW_ACCEPT_IMAGES = "image/png,image/jpeg,image/jpg,image/webp";
+const PREVIEW_ACCEPT_DOCLAYOUTS = "image/png,image/jpeg,image/jpg,image/webp,application/pdf";
 const MAX_PREVIEWS = 3;
+const isPdf = (url?: string | null) => !!url && /\.pdf(\?|$)/i.test(url);
 
 interface RepositoryFile {
   id: string;
@@ -122,6 +126,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
 
   // Info dialog
   const [infoFile, setInfoFile] = useState<RepositoryFile | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Edit dialog
   const [editFile, setEditFile] = useState<RepositoryFile | null>(null);
@@ -466,10 +471,10 @@ export const Repository = ({ kind }: RepositoryProps) => {
             </div>
             {hasPreviews && (
               <div>
-                <Label>Imagens ilustrativas (até {MAX_PREVIEWS} — PNG, JPG, WEBP)</Label>
+                <Label>Imagens ilustrativas (até {MAX_PREVIEWS}{kind === "doclayouts" ? " — PNG, JPG, WEBP, PDF" : " — PNG, JPG, WEBP"})</Label>
                 <Input
                   type="file"
-                  accept={PREVIEW_ACCEPT}
+                  accept={kind === "doclayouts" ? PREVIEW_ACCEPT_DOCLAYOUTS : PREVIEW_ACCEPT_IMAGES}
                   multiple
                   onChange={(e) => {
                     const list = Array.from(e.target.files || []).slice(0, MAX_PREVIEWS);
@@ -519,14 +524,38 @@ export const Repository = ({ kind }: RepositoryProps) => {
                 <div>
                   <Label className="text-xs text-muted-foreground">Imagens na prática</Label>
                   <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {allPreviews(infoFile).map((p, i) => (
-                      <img
-                        key={i}
-                        src={p.url}
-                        alt={`Preview ${i + 1}`}
-                        className="w-full rounded border object-contain max-h-80 bg-muted"
-                      />
-                    ))}
+                    {allPreviews(infoFile).map((p, i) => {
+                      const pdf = isPdf(p.url);
+                      return (
+                        <button
+                          type="button"
+                          key={i}
+                          onClick={() => setLightboxIndex(i)}
+                          className="group relative rounded border bg-muted overflow-hidden hover:ring-2 hover:ring-primary transition"
+                          title="Clique para ampliar"
+                        >
+                          {pdf ? (
+                            <div className="relative w-full h-56">
+                              <iframe
+                                src={`${p.url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                                className="w-full h-full pointer-events-none"
+                                title={`PDF ${i + 1}`}
+                              />
+                              <div className="absolute inset-0 bg-transparent group-hover:bg-black/10 transition" />
+                              <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded bg-black/60 text-white text-xs">
+                                <FileText className="h-3 w-3" /> PDF — clique para ampliar
+                              </div>
+                            </div>
+                          ) : (
+                            <img
+                              src={p.url}
+                              alt={`Preview ${i + 1}`}
+                              className="w-full object-contain max-h-80"
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
@@ -593,7 +622,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
                 {editKeepUrls.length < MAX_PREVIEWS && (
                   <Input
                     type="file"
-                    accept={PREVIEW_ACCEPT}
+                    accept={kind === "doclayouts" ? PREVIEW_ACCEPT_DOCLAYOUTS : PREVIEW_ACCEPT_IMAGES}
                     multiple
                     onChange={(e) => {
                       const slots = MAX_PREVIEWS - editKeepUrls.length;
@@ -621,6 +650,13 @@ export const Repository = ({ kind }: RepositoryProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PreviewLightbox
+        items={allPreviews(infoFile).map((p) => ({ url: p.url, type: isPdf(p.url) ? "pdf" : "image" }))}
+        index={lightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+        onIndexChange={setLightboxIndex}
+      />
     </SidebarProvider>
   );
 };

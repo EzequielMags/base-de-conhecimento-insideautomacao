@@ -104,15 +104,41 @@ const ConsultaCnpj = () => {
     data?.inscricoes_estaduais?.[0]?.inscricao_estadual ||
     "—";
 
+  const fmtMoney = (v?: number) =>
+    typeof v === "number"
+      ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+      : "—";
+  const fmtDate = (s?: string) => {
+    if (!s) return "—";
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? s : d.toLocaleDateString("pt-BR");
+  };
+  const porte =
+    (typeof data?.porte === "object" ? data?.porte?.descricao : data?.porte) ||
+    data?.descricao_porte ||
+    "—";
+
   const fields = data
     ? [
-        { icon: Building2, label: "Nome Empresarial (Razão Social)", value: data.razao_social || "—" },
+        { icon: Building2, label: "Razão Social", value: data.razao_social || "—" },
         { icon: Building, label: "Nome Fantasia", value: data.nome_fantasia || "—" },
+        { icon: Hash, label: "CNPJ", value: data.cnpj ? formatCnpj(data.cnpj) : "—" },
         { icon: FileBadge, label: "Inscrição Estadual (IE)", value: ie },
+        { icon: Activity, label: "Situação Cadastral", value: data.descricao_situacao_cadastral || String(data.situacao_cadastral ?? "—") },
+        { icon: Calendar, label: "Data da Situação", value: fmtDate(data.data_situacao_cadastral) },
+        { icon: Calendar, label: "Início de Atividade", value: fmtDate(data.data_inicio_atividade) },
+        { icon: Briefcase, label: "CNAE Principal", value: data.cnae_fiscal ? `${data.cnae_fiscal} — ${data.cnae_fiscal_descricao || ""}` : "—" },
+        { icon: Landmark, label: "Natureza Jurídica", value: data.natureza_juridica || "—" },
+        { icon: Users, label: "Porte", value: porte },
+        { icon: DollarSign, label: "Capital Social", value: fmtMoney(data.capital_social) },
         { icon: Mailbox, label: "CEP", value: data.cep || "—" },
-        { icon: Home, label: "Logradouro", value: data.logradouro || "—" },
+        { icon: Home, label: "Logradouro", value: [data.logradouro, data.numero].filter(Boolean).join(", ") || "—" },
         { icon: MapPin, label: "Bairro", value: data.bairro || "—" },
+        { icon: Globe, label: "Município/UF", value: data.municipio ? `${data.municipio}/${data.uf || ""}` : "—" },
         { icon: Hash, label: "Complemento", value: data.complemento || "—" },
+        { icon: Phone, label: "Telefone", value: data.ddd_telefone_1 || "—" },
+        { icon: Phone, label: "Telefone 2", value: data.ddd_telefone_2 || "—" },
+        { icon: Mail, label: "E-mail", value: data.email || "—" },
       ]
     : [];
 

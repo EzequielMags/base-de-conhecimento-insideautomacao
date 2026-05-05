@@ -44,11 +44,27 @@ interface CnpjData {
   nome_fantasia?: string;
   cep?: string;
   logradouro?: string;
+  numero?: string;
   bairro?: string;
   complemento?: string;
   municipio?: string;
   uf?: string;
   cnpj?: string;
+  ddd_telefone_1?: string;
+  ddd_telefone_2?: string;
+  email?: string;
+  capital_social?: number;
+  porte?: { descricao?: string } | string;
+  descricao_porte?: string;
+  natureza_juridica?: string;
+  descricao_situacao_cadastral?: string;
+  situacao_cadastral?: string | number;
+  data_situacao_cadastral?: string;
+  data_inicio_atividade?: string;
+  cnae_fiscal?: number;
+  cnae_fiscal_descricao?: string;
+  cnaes_secundarios?: Array<{ codigo?: number; descricao?: string }>;
+  qsa?: Array<{ nome_socio?: string; qualificacao_socio?: string }>;
   inscricoes_estaduais?: Array<{ inscricao_estadual?: string; ativo?: boolean; estado?: string }>;
 }
 

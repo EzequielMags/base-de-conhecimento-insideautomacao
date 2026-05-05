@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { PreviewLightbox } from "@/components/PreviewLightbox";
+import { FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";

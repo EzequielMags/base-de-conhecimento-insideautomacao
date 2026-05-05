@@ -79,8 +79,10 @@ const CONFIGS: Record<RepositoryKind, RepositoryConfig> = {
 };
 
 const PREVIEW_BUCKET = "doclayouts-previews";
-const PREVIEW_ACCEPT = "image/png,image/jpeg,image/jpg,image/webp";
+const PREVIEW_ACCEPT_IMAGES = "image/png,image/jpeg,image/jpg,image/webp";
+const PREVIEW_ACCEPT_DOCLAYOUTS = "image/png,image/jpeg,image/jpg,image/webp,application/pdf";
 const MAX_PREVIEWS = 3;
+const isPdf = (url?: string | null) => !!url && /\.pdf(\?|$)/i.test(url);
 
 interface RepositoryFile {
   id: string;

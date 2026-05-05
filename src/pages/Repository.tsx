@@ -523,14 +523,38 @@ export const Repository = ({ kind }: RepositoryProps) => {
                 <div>
                   <Label className="text-xs text-muted-foreground">Imagens na prática</Label>
                   <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {allPreviews(infoFile).map((p, i) => (
-                      <img
-                        key={i}
-                        src={p.url}
-                        alt={`Preview ${i + 1}`}
-                        className="w-full rounded border object-contain max-h-80 bg-muted"
-                      />
-                    ))}
+                    {allPreviews(infoFile).map((p, i) => {
+                      const pdf = isPdf(p.url);
+                      return (
+                        <button
+                          type="button"
+                          key={i}
+                          onClick={() => setLightboxIndex(i)}
+                          className="group relative rounded border bg-muted overflow-hidden hover:ring-2 hover:ring-primary transition"
+                          title="Clique para ampliar"
+                        >
+                          {pdf ? (
+                            <div className="relative w-full h-56">
+                              <iframe
+                                src={`${p.url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                                className="w-full h-full pointer-events-none"
+                                title={`PDF ${i + 1}`}
+                              />
+                              <div className="absolute inset-0 bg-transparent group-hover:bg-black/10 transition" />
+                              <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded bg-black/60 text-white text-xs">
+                                <FileText className="h-3 w-3" /> PDF — clique para ampliar
+                              </div>
+                            </div>
+                          ) : (
+                            <img
+                              src={p.url}
+                              alt={`Preview ${i + 1}`}
+                              className="w-full object-contain max-h-80"
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (

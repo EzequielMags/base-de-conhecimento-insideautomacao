@@ -126,6 +126,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
 
   // Info dialog
   const [infoFile, setInfoFile] = useState<RepositoryFile | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Edit dialog
   const [editFile, setEditFile] = useState<RepositoryFile | null>(null);

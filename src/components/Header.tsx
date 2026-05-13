@@ -17,6 +17,7 @@ interface HeaderProps {
 export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
 

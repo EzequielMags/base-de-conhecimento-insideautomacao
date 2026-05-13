@@ -44,6 +44,8 @@ const App = () => (
               <Route path="/autopen" element={<PrivateRoute><Autopen /></PrivateRoute>} />
               <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
               <Route path="/consulta-cnpj" element={<PrivateRoute><ConsultaCnpj /></PrivateRoute>} />
+              <Route path="/demandas" element={<PrivateRoute><Demands /></PrivateRoute>} />
+              <Route path="/finalizados" element={<PrivateRoute><Demands finalized /></PrivateRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

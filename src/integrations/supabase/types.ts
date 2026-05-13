@@ -83,6 +83,63 @@ export type Database = {
         }
         Relationships: []
       }
+      demands: {
+        Row: {
+          assignee_id: string | null
+          assignee_name: string | null
+          category: string | null
+          completed_at: string | null
+          completed_by: string | null
+          completed_by_name: string | null
+          created_at: string
+          created_by: string
+          created_by_name: string | null
+          deadline: string | null
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["demand_priority"]
+          status: Database["public"]["Enums"]["demand_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          assignee_name?: string | null
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completed_by_name?: string | null
+          created_at?: string
+          created_by: string
+          created_by_name?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["demand_priority"]
+          status?: Database["public"]["Enums"]["demand_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          assignee_name?: string | null
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completed_by_name?: string | null
+          created_at?: string
+          created_by?: string
+          created_by_name?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["demand_priority"]
+          status?: Database["public"]["Enums"]["demand_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       printer_files: {
         Row: {
           brand: string
@@ -335,6 +392,8 @@ export type Database = {
         | "Sistema"
         | "Tablet"
         | "Extras"
+      demand_priority: "baixa" | "media" | "alta"
+      demand_status: "aguardando" | "concluido"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -473,6 +532,8 @@ export const Constants = {
         "Tablet",
         "Extras",
       ],
+      demand_priority: ["baixa", "media", "alta"],
+      demand_status: ["aguardando", "concluido"],
     },
   },
 } as const

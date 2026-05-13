@@ -13,6 +13,7 @@ import Impressoras from "./pages/Impressoras";
 import Autopen from "./pages/Autopen";
 import Settings from "./pages/Settings";
 import ConsultaCnpj from "./pages/ConsultaCnpj";
+import Demands from "./pages/Demands";
 import { HoverSoundEffect } from "./components/HoverSoundEffect";
 import { IntegriChatProvider } from "./components/IntegriChatContext";
 import { IntegriChatPanel } from "./components/IntegriChatPanel";

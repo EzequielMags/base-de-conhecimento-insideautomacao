@@ -30,6 +30,8 @@ export function AppSidebar() {
 
   const sections: NavSection[] = [
     { label: "Cards de Conhecimento", icon: LayoutGrid, path: "/" },
+    { label: "Demandas", icon: ListChecks, path: "/demandas" },
+    { label: "Finalizados", icon: CheckCircle2, path: "/finalizados" },
     { label: "PDFs Técnicos", icon: FileType, path: "/pdfs-tecnicos" },
     { label: "Banco de Lojas", icon: Store, path: "/banco-lojas" },
     { label: "Scripts", icon: Code2, path: "/scripts" },

@@ -61,6 +61,19 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              {(() => {
+                const onDemands = location.pathname === "/demandas" || location.pathname === "/finalizados";
+                return (
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(onDemands ? "/" : "/demandas")}
+                    className="gap-2 border-primary/40 hover:bg-primary/10"
+                  >
+                    {onDemands ? <BookOpen className="h-4 w-4" /> : <ListChecks className="h-4 w-4" />}
+                    <span className="hidden sm:inline">{onDemands ? "Cards de Conhecimento" : "Demandas"}</span>
+                  </Button>
+                );
+              })()}
               {canCreate && (
                 <Button onClick={onNewCard} className="gap-2">
                   <Plus className="h-4 w-4" />

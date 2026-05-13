@@ -32,11 +32,15 @@ import {
   CalendarDays,
   ListChecks,
   BookOpen,
+  Menu,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { format, isBefore, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Header } from "@/components/Header";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 interface Demand {
   id: string;

@@ -1,4 +1,4 @@
-import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2 } from "lucide-react";
+import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2, ListChecks, CheckCircle2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,

@@ -464,7 +464,10 @@ const Demands = ({ finalized = false }: Props) => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 

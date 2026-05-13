@@ -219,8 +219,21 @@ const Demands = ({ finalized = false }: Props) => {
     return isBefore(new Date(d.deadline + "T23:59:59"), startOfToday());
   };
 
+  const noopNewCard = () => navigate("/");
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col">
+          <Header onNewCard={noopNewCard} canCreate={false} />
+          <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">
+            <SidebarTrigger className="hover:bg-accent transition-colors">
+              <Menu className="h-5 w-5" />
+            </SidebarTrigger>
+            <span className="text-sm text-muted-foreground">Menu</span>
+          </div>
+          <main className="flex-1 container mx-auto px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">

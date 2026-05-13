@@ -13,6 +13,7 @@ import Impressoras from "./pages/Impressoras";
 import Autopen from "./pages/Autopen";
 import Settings from "./pages/Settings";
 import ConsultaCnpj from "./pages/ConsultaCnpj";
+import Demands from "./pages/Demands";
 import { HoverSoundEffect } from "./components/HoverSoundEffect";
 import { IntegriChatProvider } from "./components/IntegriChatContext";
 import { IntegriChatPanel } from "./components/IntegriChatPanel";
@@ -43,6 +44,8 @@ const App = () => (
               <Route path="/autopen" element={<PrivateRoute><Autopen /></PrivateRoute>} />
               <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
               <Route path="/consulta-cnpj" element={<PrivateRoute><ConsultaCnpj /></PrivateRoute>} />
+              <Route path="/demandas" element={<PrivateRoute><Demands /></PrivateRoute>} />
+              <Route path="/finalizados" element={<PrivateRoute><Demands finalized /></PrivateRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

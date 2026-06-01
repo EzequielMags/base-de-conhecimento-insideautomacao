@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/use-user-role";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,12 @@ import {
   ListChecks,
   BookOpen,
   Menu,
+  Paperclip,
+  X,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  Volume2,
+  Mic,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -41,6 +47,14 @@ import { ptBR } from "date-fns/locale";
 import { Header } from "@/components/Header";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AudioRecorder } from "@/components/AudioRecorder";
+
+interface Attachment {
+  url: string;
+  path: string;
+  type: "image" | "video";
+  name: string;
+}
 
 interface Demand {
   id: string;
@@ -57,6 +71,8 @@ interface Demand {
   completed_at: string | null;
   completed_by_name: string | null;
   created_at: string;
+  attachments?: Attachment[];
+  audio_url?: string | null;
 }
 
 interface Profile {
@@ -95,6 +111,7 @@ const Demands = ({ finalized = false }: Props) => {
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
   const [viewing, setViewing] = useState<Demand | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // form state
   const [form, setForm] = useState({
@@ -105,6 +122,15 @@ const Demands = ({ finalized = false }: Props) => {
     deadline: "",
     assignee_id: "none",
   });
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const resetForm = () => {
+    setForm({ title: "", description: "", category: "Sistema", priority: "media", deadline: "", assignee_id: "none" });
+    setMediaFiles([]);
+    setAudioBlob(null);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -143,32 +169,67 @@ const Demands = ({ finalized = false }: Props) => {
     [demands, finalized]
   );
 
+  const uploadFile = async (file: Blob, ext: string): Promise<{ url: string; path: string }> => {
+    const path = `${user!.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("demand-media").upload(path, file, {
+      contentType: file.type || undefined,
+      upsert: false,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from("demand-media").getPublicUrl(path);
+    return { url: data.publicUrl, path };
+  };
+
   const handleCreate = async () => {
     if (!form.title.trim()) {
       toast({ title: "Título obrigatório", variant: "destructive" });
       return;
     }
     if (!user) return;
-    const assignee = form.assignee_id !== "none" ? profiles.find((p) => p.id === form.assignee_id) : null;
-    const { error } = await supabase.from("demands" as any).insert({
-      title: form.title.trim(),
-      description: form.description.trim(),
-      category: form.category,
-      priority: form.priority,
-      deadline: form.deadline || null,
-      assignee_id: assignee?.id || null,
-      assignee_name: assignee?.name || null,
-      created_by: user.id,
-      created_by_name: user.user_metadata?.name || user.email?.split("@")[0] || null,
-    });
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-      return;
+    setSubmitting(true);
+    try {
+      // Upload media
+      const attachments: Attachment[] = [];
+      for (const f of mediaFiles) {
+        const ext = f.name.split(".").pop() || "bin";
+        const { url, path } = await uploadFile(f, ext);
+        attachments.push({
+          url,
+          path,
+          type: f.type.startsWith("video") ? "video" : "image",
+          name: f.name,
+        });
+      }
+      let audio_url: string | null = null;
+      if (audioBlob) {
+        const up = await uploadFile(audioBlob, "webm");
+        audio_url = up.url;
+      }
+
+      const assignee = form.assignee_id !== "none" ? profiles.find((p) => p.id === form.assignee_id) : null;
+      const { error } = await supabase.from("demands" as any).insert({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        category: form.category,
+        priority: form.priority,
+        deadline: form.deadline || null,
+        assignee_id: assignee?.id || null,
+        assignee_name: assignee?.name || null,
+        created_by: user.id,
+        created_by_name: user.user_metadata?.name || user.email?.split("@")[0] || null,
+        attachments: attachments as any,
+        audio_url,
+      });
+      if (error) throw error;
+      toast({ title: "Demanda criada com sucesso" });
+      setOpenCreate(false);
+      resetForm();
+      load();
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message ?? String(e), variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
-    toast({ title: "Demanda criada com sucesso" });
-    setOpenCreate(false);
-    setForm({ title: "", description: "", category: "Sistema", priority: "media", deadline: "", assignee_id: "none" });
-    load();
   };
 
   const handleComplete = async (d: Demand) => {
@@ -234,236 +295,330 @@ const Demands = ({ finalized = false }: Props) => {
             <span className="text-sm text-muted-foreground">Menu</span>
           </div>
           <main className="flex-1 container mx-auto px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-            <ListChecks className="h-4 w-4" />
-            <span>Painel de Demandas</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {finalized ? "Demandas Finalizadas" : "Demandas Ativas"}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {finalized
-              ? "Histórico de demandas concluídas pela equipe."
-              : "Acompanhe os tickets em aberto, seus prazos e prioridades."}
-          </p>
-        </div>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+              <div>
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                  <ListChecks className="h-4 w-4" />
+                  <span>Painel de Demandas</span>
+                </div>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {finalized ? "Demandas Finalizadas" : "Demandas Ativas"}
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  {finalized
+                    ? "Histórico de demandas concluídas pela equipe."
+                    : "Acompanhe os tickets em aberto, seus prazos e prioridades."}
+                </p>
+              </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => navigate(finalized ? "/demandas" : "/finalizados")} className="gap-2">
-            {finalized ? <ListChecks className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-            {finalized ? "Ver Ativas" : "Ver Finalizados"}
-          </Button>
-          <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
-            <BookOpen className="h-4 w-4" />
-            Cards de Conhecimento
-          </Button>
-          {canCreate && !finalized && (
-            <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Nova Demanda
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button variant="outline" onClick={() => navigate(finalized ? "/demandas" : "/finalizados")} className="gap-2">
+                  {finalized ? <ListChecks className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                  {finalized ? "Ver Ativas" : "Ver Finalizados"}
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Nova Demanda</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Título *</Label>
-                    <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Corrigir impressora loja 12" />
-                  </div>
-                  <div>
-                    <Label>Descrição técnica</Label>
-                    <Textarea
-                      value={form.description}
-                      onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      rows={4}
-                      placeholder="Detalhes do que precisa ser feito..."
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Categoria</Label>
-                      <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Prioridade</Label>
-                      <Select value={form.priority} onValueChange={(v: any) => setForm({ ...form, priority: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="baixa">Baixa</SelectItem>
-                          <SelectItem value="media">Média</SelectItem>
-                          <SelectItem value="alta">Alta</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Prazo</Label>
-                      <Input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label>Responsável</Label>
-                      <Select value={form.assignee_id} onValueChange={(v) => setForm({ ...form, assignee_id: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Sem responsável</SelectItem>
-                          {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="ghost" onClick={() => setOpenCreate(false)}>Cancelar</Button>
-                  <Button onClick={handleCreate}>Criar Demanda</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
-      </div>
-
-      {loading ? (
-        <p className="text-muted-foreground text-center py-12">Carregando...</p>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-16 border border-dashed rounded-xl">
-          <ListChecks className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-lg text-muted-foreground">
-            {finalized ? "Nenhuma demanda finalizada ainda." : "Nenhuma demanda ativa no momento."}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((d, idx) => {
-            const overdue = isOverdue(d);
-            const stateClass = d.status === "concluido"
-              ? "demand-done"
-              : overdue ? "demand-overdue" : "demand-waiting";
-            return (
-              <motion.div
-                key={d.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: idx * 0.03 }}
-                className={`relative rounded-xl border-2 bg-card p-5 flex flex-col gap-3 ${stateClass}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {d.status === "concluido" ? (
-                      <Badge className="bg-green-500/20 text-green-400 border-green-500/40 gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> Concluído
-                      </Badge>
-                    ) : overdue ? (
-                      <Badge className="bg-red-500/20 text-red-400 border-red-500/40 gap-1">
-                        <AlertTriangle className="h-3 w-3" /> Atrasado
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/40 gap-1">
-                        <Clock className="h-3 w-3" /> Aguardando
-                      </Badge>
-                    )}
-                    <Badge variant="outline" className={PRIORITY_COLOR[d.priority]}>
-                      {PRIORITY_LABEL[d.priority]}
-                    </Badge>
-                    {d.category && <Badge variant="secondary">{d.category}</Badge>}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold leading-tight line-clamp-2">{d.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">
-                    {d.description || <span className="italic opacity-60">Sem descrição</span>}
-                  </p>
-                </div>
-
-                <div className="text-xs text-muted-foreground space-y-0.5 mt-auto">
-                  {d.deadline && (
-                    <div className="flex items-center gap-1.5">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      Prazo: {format(new Date(d.deadline + "T00:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </div>
-                  )}
-                  {d.assignee_name && <div>👤 Responsável: {d.assignee_name}</div>}
-                  {d.created_by_name && <div>✍️ Criado por: {d.created_by_name}</div>}
-                  {d.status === "concluido" && d.completed_by_name && (
-                    <div>✅ Concluído por: {d.completed_by_name}</div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  {d.status === "aguardando" ? (
-                    canCreate && (
-                      <Button size="sm" className="flex-1 gap-1" onClick={() => handleComplete(d)}>
-                        <CheckCircle2 className="h-4 w-4" /> Concluir
+                <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Cards de Conhecimento
+                </Button>
+                {canCreate && !finalized && (
+                  <Dialog open={openCreate} onOpenChange={(o) => { setOpenCreate(o); if (!o) resetForm(); }}>
+                    <DialogTrigger asChild>
+                      <Button className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Nova Demanda
                       </Button>
-                    )
-                  ) : (
-                    canCreate && (
-                      <Button size="sm" variant="outline" className="flex-1 gap-1" onClick={() => handleReopen(d)}>
-                        <Clock className="h-4 w-4" /> Reabrir
-                      </Button>
-                    )
-                  )}
-                  <Button size="sm" variant="outline" className="gap-1" onClick={() => setViewing(d)}>
-                    <Eye className="h-4 w-4" /> Ver Detalhes
-                  </Button>
-                  {isAdmin && (
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(d)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      )}
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Nova Demanda</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Título *</Label>
+                          <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Corrigir impressora loja 12" />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <Label>Descrição técnica</Label>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Mic className="h-3.5 w-3.5" /> Áudio opcional
+                            </div>
+                          </div>
+                          <Textarea
+                            value={form.description}
+                            onChange={(e) => setForm({ ...form, description: e.target.value })}
+                            rows={4}
+                            placeholder="Detalhes do que precisa ser feito..."
+                          />
+                          <div className="mt-2">
+                            <AudioRecorder onChange={setAudioBlob} />
+                          </div>
+                        </div>
 
-      {/* Detail dialog */}
-      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
-        <DialogContent className="max-w-lg">
-          {viewing && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{viewing.title}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3 text-sm">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className={PRIORITY_COLOR[viewing.priority]}>
-                    Prioridade {PRIORITY_LABEL[viewing.priority]}
-                  </Badge>
-                  {viewing.category && <Badge variant="secondary">{viewing.category}</Badge>}
-                </div>
-                <p className="whitespace-pre-wrap">{viewing.description || "—"}</p>
-                {viewing.deadline && (
-                  <p className="text-muted-foreground">
-                    📅 Prazo: {format(new Date(viewing.deadline + "T00:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                  </p>
-                )}
-                {viewing.assignee_name && <p className="text-muted-foreground">👤 Responsável: {viewing.assignee_name}</p>}
-                {viewing.created_by_name && <p className="text-muted-foreground">✍️ Criado por: {viewing.created_by_name}</p>}
-                {viewing.status === "concluido" && viewing.completed_at && (
-                  <p className="text-muted-foreground">
-                    ✅ Concluída em {format(new Date(viewing.completed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                    {viewing.completed_by_name ? ` por ${viewing.completed_by_name}` : ""}
-                  </p>
+                        <div>
+                          <Label>Anexos (imagens / vídeos)</Label>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            accept="image/*,video/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const fs = Array.from(e.target.files || []);
+                              setMediaFiles((prev) => [...prev, ...fs]);
+                              if (fileInputRef.current) fileInputRef.current.value = "";
+                            }}
+                          />
+                          <Button type="button" variant="outline" size="sm" className="gap-1" onClick={() => fileInputRef.current?.click()}>
+                            <Paperclip className="h-4 w-4" /> Anexar mídia
+                          </Button>
+                          {mediaFiles.length > 0 && (
+                            <div className="mt-2 grid grid-cols-3 gap-2">
+                              {mediaFiles.map((f, i) => (
+                                <div key={i} className="relative border rounded-md p-1 text-xs">
+                                  <button
+                                    type="button"
+                                    onClick={() => setMediaFiles((prev) => prev.filter((_, j) => j !== i))}
+                                    className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                  <div className="flex items-center gap-1 truncate">
+                                    {f.type.startsWith("video") ? <VideoIcon className="h-3 w-3" /> : <ImageIcon className="h-3 w-3" />}
+                                    <span className="truncate">{f.name}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Categoria</Label>
+                            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Prioridade</Label>
+                            <Select value={form.priority} onValueChange={(v: any) => setForm({ ...form, priority: v })}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="baixa">Baixa</SelectItem>
+                                <SelectItem value="media">Média</SelectItem>
+                                <SelectItem value="alta">Alta</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Prazo</Label>
+                            <Input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
+                          </div>
+                          <div>
+                            <Label>Responsável</Label>
+                            <Select value={form.assignee_id} onValueChange={(v) => setForm({ ...form, assignee_id: v })}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Sem responsável</SelectItem>
+                                {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="ghost" onClick={() => { setOpenCreate(false); resetForm(); }}>Cancelar</Button>
+                        <Button onClick={handleCreate} disabled={submitting}>
+                          {submitting ? "Enviando..." : "Criar Demanda"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+            </div>
+
+            {loading ? (
+              <p className="text-muted-foreground text-center py-12">Carregando...</p>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-16 border border-dashed rounded-xl">
+                <ListChecks className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                <p className="text-lg text-muted-foreground">
+                  {finalized ? "Nenhuma demanda finalizada ainda." : "Nenhuma demanda ativa no momento."}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filtered.map((d, idx) => {
+                  const overdue = isOverdue(d);
+                  const stateClass = d.status === "concluido"
+                    ? "demand-done"
+                    : overdue ? "demand-overdue" : "demand-waiting";
+                  const attachments = (d.attachments || []) as Attachment[];
+                  return (
+                    <motion.div
+                      key={d.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: idx * 0.03 }}
+                      whileHover={{ scale: 1.03, y: -4 }}
+                      className={`relative rounded-xl border-2 bg-card p-5 flex flex-col gap-3 cursor-default transition-shadow hover:shadow-2xl hover:shadow-primary/20 ${stateClass}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {d.status === "concluido" ? (
+                            <Badge className="bg-green-500/20 text-green-400 border-green-500/40 gap-1">
+                              <CheckCircle2 className="h-3 w-3" /> Concluído
+                            </Badge>
+                          ) : overdue ? (
+                            <Badge className="bg-red-500/20 text-red-400 border-red-500/40 gap-1">
+                              <AlertTriangle className="h-3 w-3" /> Atrasado
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/40 gap-1">
+                              <Clock className="h-3 w-3" /> Aguardando
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className={PRIORITY_COLOR[d.priority]}>
+                            {PRIORITY_LABEL[d.priority]}
+                          </Badge>
+                          {d.category && <Badge variant="secondary">{d.category}</Badge>}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-semibold leading-tight line-clamp-2">{d.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">
+                          {d.description || <span className="italic opacity-60">Sem descrição</span>}
+                        </p>
+                      </div>
+
+                      {(attachments.length > 0 || d.audio_url) && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {attachments.some((a) => a.type === "image") && (
+                            <span className="flex items-center gap-1"><ImageIcon className="h-3 w-3" /> {attachments.filter((a) => a.type === "image").length}</span>
+                          )}
+                          {attachments.some((a) => a.type === "video") && (
+                            <span className="flex items-center gap-1"><VideoIcon className="h-3 w-3" /> {attachments.filter((a) => a.type === "video").length}</span>
+                          )}
+                          {d.audio_url && (
+                            <span className="flex items-center gap-1"><Volume2 className="h-3 w-3" /> áudio</span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="text-xs text-muted-foreground space-y-0.5 mt-auto">
+                        {d.deadline && (
+                          <div className="flex items-center gap-1.5">
+                            <CalendarDays className="h-3.5 w-3.5" />
+                            Prazo: {format(new Date(d.deadline + "T00:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          </div>
+                        )}
+                        {d.assignee_name && <div>👤 Responsável: {d.assignee_name}</div>}
+                        {d.created_by_name && <div>✍️ Criado por: {d.created_by_name}</div>}
+                        {d.status === "concluido" && d.completed_by_name && (
+                          <div>✅ Concluído por: {d.completed_by_name}</div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2">
+                        {d.status === "aguardando" ? (
+                          canCreate && (
+                            <Button size="sm" className="flex-1 gap-1" onClick={() => handleComplete(d)}>
+                              <CheckCircle2 className="h-4 w-4" /> Concluir
+                            </Button>
+                          )
+                        ) : (
+                          canCreate && (
+                            <Button size="sm" variant="outline" className="flex-1 gap-1" onClick={() => handleReopen(d)}>
+                              <Clock className="h-4 w-4" /> Reabrir
+                            </Button>
+                          )
+                        )}
+                        <Button size="sm" variant="outline" className="gap-1" onClick={() => setViewing(d)}>
+                          <Eye className="h-4 w-4" /> Ver Detalhes
+                        </Button>
+                        {isAdmin && (
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(d)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Detail dialog */}
+            <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                {viewing && (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle>{viewing.title}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className={PRIORITY_COLOR[viewing.priority]}>
+                          Prioridade {PRIORITY_LABEL[viewing.priority]}
+                        </Badge>
+                        {viewing.category && <Badge variant="secondary">{viewing.category}</Badge>}
+                      </div>
+                      <p className="whitespace-pre-wrap">{viewing.description || "—"}</p>
+
+                      {viewing.audio_url && (
+                        <div className="border rounded-lg p-3 bg-muted/30">
+                          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                            <Volume2 className="h-3 w-3" /> Áudio gravado
+                          </div>
+                          <audio controls src={viewing.audio_url} className="w-full" />
+                        </div>
+                      )}
+
+                      {(viewing.attachments?.length ?? 0) > 0 && (
+                        <div className="space-y-2">
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Paperclip className="h-3 w-3" /> Anexos
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(viewing.attachments || []).map((a, i) =>
+                              a.type === "image" ? (
+                                <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block">
+                                  <img src={a.url} alt={a.name} className="w-full h-32 object-cover rounded border hover:opacity-90 transition" />
+                                </a>
+                              ) : (
+                                <video key={i} src={a.url} controls className="w-full h-32 object-cover rounded border bg-black" />
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {viewing.deadline && (
+                        <p className="text-muted-foreground">
+                          📅 Prazo: {format(new Date(viewing.deadline + "T00:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        </p>
+                      )}
+                      {viewing.assignee_name && <p className="text-muted-foreground">👤 Responsável: {viewing.assignee_name}</p>}
+                      {viewing.created_by_name && <p className="text-muted-foreground">✍️ Criado por: {viewing.created_by_name}</p>}
+                      {viewing.status === "concluido" && viewing.completed_at && (
+                        <p className="text-muted-foreground">
+                          ✅ Concluída em {format(new Date(viewing.completed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          {viewing.completed_by_name ? ` por ${viewing.completed_by_name}` : ""}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
           </main>
         </div>
       </div>

@@ -18,6 +18,7 @@ import { Loader2, Menu } from "lucide-react";
 import { useUserRole } from "@/hooks/use-user-role";
 import { PinCardsDialog } from "@/components/PinCardsDialog";
 import { usePinnedCards } from "@/hooks/use-pinned-cards";
+import { ImageSearchDialog } from "@/components/ImageSearchDialog";
 
 const Index = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -247,6 +248,7 @@ const Index = () => {
                   selected={selectedCategory}
                   onSelect={setSelectedCategory}
                 />
+                <ImageSearchDialog cards={cards} onOpenCard={handleView} />
                 {canCreate && (
                   <PinCardsDialog
                     cards={cards}

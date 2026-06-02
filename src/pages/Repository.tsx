@@ -619,7 +619,14 @@ export const Repository = ({ kind }: RepositoryProps) => {
                   <div className="flex flex-wrap gap-2">
                     {editKeepUrls.map((u, i) => (
                       <div key={u} className="relative">
-                        <img src={u} alt="" className="h-20 w-20 object-cover rounded border" />
+                        {isPdf(u) ? (
+                          <div className="h-20 w-20 rounded border bg-muted flex flex-col items-center justify-center gap-1 text-xs text-muted-foreground">
+                            <FileText className="h-5 w-5 text-primary" />
+                            PDF
+                          </div>
+                        ) : (
+                          <img src={u} alt="" className="h-20 w-20 object-cover rounded border" />
+                        )}
                         <button
                           type="button"
                           onClick={() => {

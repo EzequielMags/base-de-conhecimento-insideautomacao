@@ -14,6 +14,7 @@ import { formatFileSize, downloadFile } from "@/utils/fileUpload";
 import { PermissionsGuide } from "@/components/PermissionsGuide";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useUserRole } from "@/hooks/use-user-role";
 
 interface TechnicalPdf {
   id: string;
@@ -27,22 +28,12 @@ interface TechnicalPdf {
 const PdfsTecnicos = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
+  const { user, isAdmin, canCreate } = useUserRole();
   const [pdfs, setPdfs] = useState<TechnicalPdf[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
   const [previewEnabled, setPreviewEnabled] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -60,11 +51,22 @@ const PdfsTecnicos = () => {
 
   useEffect(() => { load(); }, []);
 
+  const sanitizeFileName = (name: string) =>
+    name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/_+/g, "_");
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     if (!user) {
       toast({ title: "Login necessário", description: "Faça login para enviar PDFs.", variant: "destructive" });
+      return;
+    }
+    if (!canCreate) {
+      toast({ title: "Sem permissão", description: "Apenas Admin ou Editor podem enviar PDFs.", variant: "destructive" });
       return;
     }
 
@@ -75,10 +77,12 @@ const PdfsTecnicos = () => {
           toast({ title: "Formato inválido", description: `${file.name} não é um PDF.`, variant: "destructive" });
           continue;
         }
-        const path = `${user.id}/${Date.now()}-${file.name}`;
+        const safeName = sanitizeFileName(file.name);
+        const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
         const { error: upErr } = await supabase.storage.from("technical-pdfs").upload(path, file, {
           cacheControl: "3600",
           upsert: false,
+          contentType: "application/pdf",
         });
         if (upErr) throw upErr;
         const { data: { publicUrl } } = supabase.storage.from("technical-pdfs").getPublicUrl(path);
@@ -89,13 +93,17 @@ const PdfsTecnicos = () => {
           file_path: path,
           file_size: file.size,
         });
-        if (insErr) throw insErr;
+        if (insErr) {
+          await supabase.storage.from("technical-pdfs").remove([path]);
+          throw insErr;
+        }
       }
       toast({ title: "Upload concluído!", description: "PDFs enviados com sucesso." });
       load();
     } catch (err) {
       console.error(err);
-      toast({ title: "Erro", description: "Falha ao enviar arquivo.", variant: "destructive" });
+      const message = err instanceof Error ? err.message : "Falha ao enviar arquivo.";
+      toast({ title: "Erro ao enviar PDF", description: message, variant: "destructive" });
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -103,6 +111,10 @@ const PdfsTecnicos = () => {
   };
 
   const handleDelete = async (pdf: TechnicalPdf) => {
+    if (!isAdmin) {
+      toast({ title: "Sem permissão", description: "Apenas administradores podem excluir PDFs.", variant: "destructive" });
+      return;
+    }
     if (!confirm(`Excluir "${pdf.name}"?`)) return;
     try {
       await supabase.storage.from("technical-pdfs").remove([pdf.file_path]);
@@ -149,13 +161,15 @@ const PdfsTecnicos = () => {
                 onChange={(e) => setSearch(e.target.value)}
                 className="flex-1"
               />
-              <Button asChild disabled={uploading} className="gap-2">
-                <label className="cursor-pointer">
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  {uploading ? "Enviando..." : "Enviar PDF"}
-                  <input type="file" accept="application/pdf,.pdf" multiple onChange={handleUpload} className="hidden" disabled={uploading} />
-                </label>
-              </Button>
+              {canCreate && (
+                <Button asChild disabled={uploading} className="gap-2">
+                  <label className="cursor-pointer">
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploading ? "Enviando..." : "Enviar PDF"}
+                    <input type="file" accept="application/pdf,.pdf" multiple onChange={handleUpload} className="hidden" disabled={uploading} />
+                  </label>
+                </Button>
+              )}
             </div>
 
             {/* Preview Toggle */}
@@ -222,9 +236,11 @@ const PdfsTecnicos = () => {
                             onClick={() => downloadFile(pdf.file_url, pdf.name)}>
                             <Download className="h-4 w-4" /> Baixar
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(pdf)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {isAdmin && (
+                            <Button size="sm" variant="destructive" onClick={() => handleDelete(pdf)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>

@@ -477,7 +477,9 @@ export const Repository = ({ kind }: RepositoryProps) => {
                   accept={kind === "doclayouts" ? PREVIEW_ACCEPT_DOCLAYOUTS : PREVIEW_ACCEPT_IMAGES}
                   multiple
                   onChange={(e) => {
-                    const list = Array.from(e.target.files || []).slice(0, MAX_PREVIEWS);
+                    const list = Array.from(e.target.files || [])
+                      .filter((file) => kind === "doclayouts" || file.type.startsWith("image/"))
+                      .slice(0, MAX_PREVIEWS);
                     setPreviewFiles(list);
                   }}
                 />
@@ -506,8 +508,13 @@ export const Repository = ({ kind }: RepositoryProps) => {
       </Dialog>
 
       {/* Info dialog */}
-      <Dialog open={!!infoFile} onOpenChange={(o) => !o && setInfoFile(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <Dialog open={!!infoFile} onOpenChange={(o) => {
+        if (!o) {
+          setLightboxIndex(null);
+          setInfoFile(null);
+        }
+      }}>
+        <DialogContent className="max-w-6xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="break-all">{infoFile?.name}</DialogTitle>
             <DialogDescription>Informações e observações deste arquivo.</DialogDescription>
@@ -522,10 +529,28 @@ export const Repository = ({ kind }: RepositoryProps) => {
             {hasPreviews && (
               allPreviews(infoFile).length > 0 ? (
                 <div>
-                  <Label className="text-xs text-muted-foreground">Imagens na prática</Label>
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Label className="text-xs text-muted-foreground">{kind === "doclayouts" ? "Prévias e PDFs" : "Imagens na prática"}</Label>
+                  <div className="mt-2 grid grid-cols-1 gap-3">
                     {allPreviews(infoFile).map((p, i) => {
                       const pdf = isPdf(p.url);
+                      if (pdf) {
+                        return (
+                          <div key={i} className="rounded border bg-muted overflow-hidden">
+                            <div className="flex items-center justify-between gap-2 border-b bg-card px-3 py-2 text-sm font-medium">
+                              <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> PDF interativo</span>
+                              <Button size="sm" variant="outline" onClick={() => setLightboxIndex(i)}>
+                                Abrir em tela cheia
+                              </Button>
+                            </div>
+                            <iframe
+                              key={`${infoFile?.id}-${p.url}`}
+                              src={`${p.url}#view=FitH`}
+                              className="h-[70vh] w-full bg-background"
+                              title={`PDF ${i + 1}`}
+                            />
+                          </div>
+                        );
+                      }
                       return (
                         <button
                           type="button"
@@ -534,25 +559,11 @@ export const Repository = ({ kind }: RepositoryProps) => {
                           className="group relative rounded border bg-muted overflow-hidden hover:ring-2 hover:ring-primary transition"
                           title="Clique para ampliar"
                         >
-                          {pdf ? (
-                            <div className="relative w-full h-56">
-                              <iframe
-                                src={`${p.url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-                                className="w-full h-full pointer-events-none"
-                                title={`PDF ${i + 1}`}
-                              />
-                              <div className="absolute inset-0 bg-transparent group-hover:bg-black/10 transition" />
-                              <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded bg-black/60 text-white text-xs">
-                                <FileText className="h-3 w-3" /> PDF — clique para ampliar
-                              </div>
-                            </div>
-                          ) : (
-                            <img
-                              src={p.url}
-                              alt={`Preview ${i + 1}`}
-                              className="w-full object-contain max-h-80"
-                            />
-                          )}
+                          <img
+                            src={p.url}
+                            alt={`Preview ${i + 1}`}
+                            className="w-full object-contain max-h-80"
+                          />
                         </button>
                       );
                     })}

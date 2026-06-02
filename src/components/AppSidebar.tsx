@@ -1,4 +1,4 @@
-import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2, ListChecks, CheckCircle2 } from "lucide-react";
+import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -30,8 +30,6 @@ export function AppSidebar() {
 
   const sections: NavSection[] = [
     { label: "Cards de Conhecimento", icon: LayoutGrid, path: "/" },
-    { label: "Demandas", icon: ListChecks, path: "/demandas" },
-    { label: "Finalizados", icon: CheckCircle2, path: "/finalizados" },
     { label: "PDFs Técnicos", icon: FileType, path: "/pdfs-tecnicos" },
     { label: "Banco de Lojas", icon: Store, path: "/banco-lojas" },
     { label: "Scripts", icon: Code2, path: "/scripts" },

@@ -3,6 +3,7 @@ import { PreviewLightbox } from "@/components/PreviewLightbox";
 import { FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,12 +158,13 @@ export const Repository = ({ kind }: RepositoryProps) => {
     if (error) {
       toast({ title: "Erro", description: "Não foi possível carregar os arquivos.", variant: "destructive" });
     } else {
-      setFiles((data as any as RepositoryFile[]) || []);
+      setFiles((data ?? []) as RepositoryFile[]);
     }
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [kind]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [kind]);
 
   const sanitize = (name: string) =>
     name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -222,7 +224,7 @@ export const Repository = ({ kind }: RepositoryProps) => {
         }
       }
 
-      const { error: insErr } = await supabase.from("repository_files").insert({
+      const payload: TablesInsert<"repository_files"> = {
         repository: kind,
         user_id: user.id,
         name: pendingFile.name,
@@ -233,7 +235,8 @@ export const Repository = ({ kind }: RepositoryProps) => {
         observation: observation.trim() || null,
         preview_urls: previews.map((p) => p.url),
         preview_paths: previews.map((p) => p.path),
-      } as any);
+      };
+      const { error: insErr } = await supabase.from("repository_files").insert(payload);
       if (insErr) throw insErr;
 
       toast({ title: "Upload concluído!" });
@@ -294,8 +297,8 @@ export const Repository = ({ kind }: RepositoryProps) => {
         await supabase.storage.from(PREVIEW_BUCKET).remove(removedPaths);
       }
 
-      let urls = [...editKeepUrls];
-      let paths = [...editKeepPaths];
+      const urls = [...editKeepUrls];
+      const paths = [...editKeepPaths];
 
       if (hasPreviews) {
         const slots = MAX_PREVIEWS - urls.length;
@@ -306,16 +309,18 @@ export const Repository = ({ kind }: RepositoryProps) => {
         }
       }
 
+      const payload: TablesUpdate<"repository_files"> = {
+        observation: editObservation.trim() || null,
+        preview_urls: urls,
+        preview_paths: paths,
+        // legacy fields cleared
+        preview_url: null,
+        preview_path: null,
+      };
+
       const { error } = await supabase
         .from("repository_files")
-        .update({
-          observation: editObservation.trim() || null,
-          preview_urls: urls,
-          preview_paths: paths,
-          // legacy fields cleared
-          preview_url: null,
-          preview_path: null,
-        } as any)
+        .update(payload)
         .eq("id", editFile.id);
       if (error) throw error;
 

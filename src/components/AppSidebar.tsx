@@ -1,4 +1,5 @@
 import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -16,7 +17,7 @@ import integgriLogo from "@/assets/integgri-logo.png";
 
 interface NavSection {
   label: string;
-  icon: any;
+  icon: LucideIcon;
   path: string;
   formats?: string;
 }

@@ -637,7 +637,9 @@ export const Repository = ({ kind }: RepositoryProps) => {
                     multiple
                     onChange={(e) => {
                       const slots = MAX_PREVIEWS - editKeepUrls.length;
-                      const list = Array.from(e.target.files || []).slice(0, slots);
+                      const list = Array.from(e.target.files || [])
+                        .filter((file) => kind === "doclayouts" || file.type.startsWith("image/"))
+                        .slice(0, slots);
                       setEditNewPreviews(list);
                     }}
                   />

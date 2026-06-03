@@ -132,7 +132,7 @@ const PdfsTecnicos = () => {
   const filtered = pdfs.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
 

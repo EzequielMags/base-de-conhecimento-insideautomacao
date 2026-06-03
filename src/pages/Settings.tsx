@@ -388,6 +388,7 @@ const Settings = () => {
             </div>
           )}
 
+          {activeTab === "usuarios" && isAdmin && (
             <div className="space-y-6">
               <div>
                 <h1 className="text-2xl font-bold">Gerenciamento de Usuários</h1>

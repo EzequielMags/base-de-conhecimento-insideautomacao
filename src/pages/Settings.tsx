@@ -339,7 +339,55 @@ const Settings = () => {
             </div>
           )}
 
-          {activeTab === "usuarios" && isAdmin && (
+          {activeTab === "temas" && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <Palette className="h-6 w-6 text-primary" /> Temas
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Escolha a aparência visual do site. As funcionalidades permanecem inalteradas.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {themeOptions.map((opt) => {
+                  const selected = skin === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => setSkin(opt.id)}
+                      className={cn(
+                        "group relative text-left rounded-xl border-2 p-4 transition-all overflow-hidden",
+                        selected
+                          ? "border-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)]"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div
+                        className="h-32 rounded-lg mb-3 border border-border/50"
+                        style={{ background: opt.preview }}
+                      />
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-semibold">{opt.name}</h3>
+                        {selected && (
+                          <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                            <Sparkles className="h-3 w-3" /> Ativo
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{opt.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Dica: combine com o modo escuro para o melhor efeito do tema Aurora.
+              </p>
+            </div>
+          )}
+
             <div className="space-y-6">
               <div>
                 <h1 className="text-2xl font-bold">Gerenciamento de Usuários</h1>

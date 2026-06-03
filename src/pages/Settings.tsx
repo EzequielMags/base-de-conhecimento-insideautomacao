@@ -14,9 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/AvatarCropDialog";
-import { Camera } from "lucide-react";
+import { Camera, Palette, Sparkles } from "lucide-react";
+import { useThemeSkin, ThemeSkin } from "@/hooks/use-theme-skin";
 
-type SettingsTab = "conta" | "usuarios";
+type SettingsTab = "conta" | "usuarios" | "temas";
 
 interface ManagedUser {
   id: string;
@@ -197,8 +198,28 @@ const Settings = () => {
     }
   };
 
+  const { skin, setSkin } = useThemeSkin();
+
+  const themeOptions: { id: ThemeSkin; name: string; description: string; preview: string }[] = [
+    {
+      id: "default",
+      name: "Clássico",
+      description: "Visual padrão limpo, com cards sólidos e cantos suaves.",
+      preview:
+        "linear-gradient(135deg, hsl(25 30% 8%), hsl(25 25% 14%)), radial-gradient(circle at 30% 30%, hsl(30 100% 50% / 0.25), transparent 50%)",
+    },
+    {
+      id: "aurora",
+      name: "Aurora",
+      description: "Glassmorphism com brilho neon laranja e grade circuito ao fundo.",
+      preview:
+        "radial-gradient(ellipse at 0% 0%, hsl(30 100% 50% / 0.5), transparent 50%), radial-gradient(ellipse at 100% 100%, hsl(30 100% 50% / 0.4), transparent 50%), linear-gradient(135deg, hsl(240 30% 8%), hsl(240 35% 5%))",
+    },
+  ];
+
   const sidebarItems: { key: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { key: "conta", label: "Conta", icon: <User className="h-4 w-4" /> },
+    { key: "temas", label: "Temas", icon: <Palette className="h-4 w-4" /> },
     ...(isAdmin ? [{ key: "usuarios" as SettingsTab, label: "Usuários", icon: <Users className="h-4 w-4" /> }] : []),
   ];
 
@@ -315,6 +336,55 @@ const Settings = () => {
                   Alterar Senha
                 </Button>
               </div>
+            </div>
+          )}
+
+          {activeTab === "temas" && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <Palette className="h-6 w-6 text-primary" /> Temas
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Escolha a aparência visual do site. As funcionalidades permanecem inalteradas.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {themeOptions.map((opt) => {
+                  const selected = skin === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => setSkin(opt.id)}
+                      className={cn(
+                        "group relative text-left rounded-xl border-2 p-4 transition-all overflow-hidden",
+                        selected
+                          ? "border-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.25)]"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div
+                        className="h-32 rounded-lg mb-3 border border-border/50"
+                        style={{ background: opt.preview }}
+                      />
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-semibold">{opt.name}</h3>
+                        {selected && (
+                          <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                            <Sparkles className="h-3 w-3" /> Ativo
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{opt.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Dica: combine com o modo escuro para o melhor efeito do tema Aurora.
+              </p>
             </div>
           )}
 

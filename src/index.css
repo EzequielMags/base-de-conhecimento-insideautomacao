@@ -218,3 +218,111 @@ All colors MUST be HSL.
   border-color: hsl(140 65% 45%) !important;
   box-shadow: 0 0 0 1px hsl(140 65% 45% / 0.4);
 }
+
+/* ============================================================
+   Theme: Aurora — glassmorphism + glow inspired by reference UI
+   Activated by toggling `theme-aurora` class on <html>.
+   ============================================================ */
+.theme-aurora {
+  /* light variant of aurora keeps light palette but adds glow */
+  --radius: 1rem;
+}
+
+.theme-aurora.dark,
+.dark.theme-aurora {
+  --background: 240 25% 6%;
+  --foreground: 30 30% 95%;
+
+  --card: 240 25% 10%;
+  --card-foreground: 30 30% 95%;
+
+  --popover: 240 30% 9%;
+  --popover-foreground: 30 30% 95%;
+
+  --primary: 30 100% 58%;
+  --primary-foreground: 240 30% 8%;
+
+  --secondary: 240 20% 16%;
+  --secondary-foreground: 30 30% 95%;
+
+  --muted: 240 18% 14%;
+  --muted-foreground: 240 10% 70%;
+
+  --accent: 30 100% 60%;
+  --accent-foreground: 240 30% 8%;
+
+  --border: 30 60% 30% / 0.35;
+  --input: 240 20% 18%;
+  --ring: 30 100% 58%;
+
+  --sidebar-background: 240 28% 8%;
+  --sidebar-foreground: 30 20% 90%;
+  --sidebar-accent: 240 25% 14%;
+  --sidebar-accent-foreground: 30 100% 60%;
+  --sidebar-border: 30 50% 25% / 0.3;
+}
+
+.theme-aurora body {
+  background:
+    radial-gradient(ellipse at 0% 0%, hsl(30 100% 50% / 0.18) 0%, transparent 45%),
+    radial-gradient(ellipse at 100% 100%, hsl(30 100% 50% / 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, hsl(240 30% 10% / 0.4) 0%, transparent 70%),
+    hsl(var(--background));
+  background-attachment: fixed;
+}
+
+/* Subtle circuit pattern background */
+.theme-aurora body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(hsl(30 100% 50% / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(30 100% 50% / 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+  z-index: 0;
+}
+
+.theme-aurora .card,
+.theme-aurora [data-slot="card"],
+.theme-aurora [class*="rounded-lg"][class*="border"][class*="bg-card"] {
+  background: linear-gradient(180deg, hsl(240 25% 12% / 0.7), hsl(240 30% 8% / 0.7)) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid hsl(30 60% 50% / 0.18) !important;
+  box-shadow:
+    0 1px 0 hsl(30 100% 60% / 0.08) inset,
+    0 20px 50px -20px hsl(30 100% 50% / 0.25),
+    0 0 0 1px hsl(30 100% 50% / 0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-aurora .card-hover:hover,
+.theme-aurora [data-slot="card"]:hover {
+  border-color: hsl(30 100% 55% / 0.45) !important;
+  box-shadow:
+    0 0 0 1px hsl(30 100% 55% / 0.2),
+    0 30px 60px -20px hsl(30 100% 50% / 0.4);
+}
+
+.theme-aurora [data-sidebar="sidebar"] {
+  background: linear-gradient(180deg, hsl(240 30% 8% / 0.85), hsl(240 35% 5% / 0.85)) !important;
+  backdrop-filter: blur(16px);
+  border-right: 1px solid hsl(30 60% 30% / 0.25);
+}
+
+/* Demand pending badge animation on header */
+@keyframes demand-badge-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-3px) scale(1.1); }
+  60% { transform: translateY(0) scale(0.95); }
+}
+@keyframes demand-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(0 90% 55% / 0.7); }
+  50% { box-shadow: 0 0 0 6px hsl(0 90% 55% / 0); }
+}
+.demand-badge {
+  animation: demand-badge-bounce 1.2s ease-in-out infinite, demand-badge-pulse 1.6s ease-out infinite;
+}

@@ -28,7 +28,9 @@ import {
   Globe,
   Briefcase,
   Landmark,
+  FileSearch,
 } from "lucide-react";
+import { useSintegra } from "@/components/SintegraContext";
 
 const formatCnpj = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 14);
@@ -70,6 +72,7 @@ interface CnpjData {
 
 const ConsultaCnpj = () => {
   const { open: chatOpen } = useIntegriChat();
+  const { open: sintegraOpen, toggle: toggleSintegra } = useSintegra();
   const [cnpj, setCnpj] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -143,13 +146,13 @@ const ConsultaCnpj = () => {
     : [];
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
 
         <div
           className={`flex-1 flex flex-col transition-all duration-300 ${
-            chatOpen ? "md:mr-[40vw]" : ""
+            chatOpen || sintegraOpen ? "md:mr-[40vw]" : ""
           }`}
         >
           <Header onNewCard={() => {}} canCreate={false} />
@@ -176,7 +179,15 @@ const ConsultaCnpj = () => {
                   Buscar empresa
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                <Button
+                  onClick={toggleSintegra}
+                  variant={sintegraOpen ? "default" : "outline"}
+                  className="w-full gap-2 border-primary/40 hover:bg-primary/10"
+                >
+                  <FileSearch className="h-4 w-4" />
+                  {sintegraOpen ? "Fechar Sintegra" : "Abrir Sintegra (SP)"}
+                </Button>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Input
                     value={cnpj}

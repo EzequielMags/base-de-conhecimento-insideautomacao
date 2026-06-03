@@ -1,4 +1,4 @@
-import { Moon, Sun, Plus, LogOut, LogIn, Settings, ListChecks, BookOpen } from "lucide-react";
+import { Moon, Sun, Plus, LogOut, LogIn, Settings, ListChecks, BookOpen, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -20,6 +20,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
   const location = useLocation();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
+  const [pendingDemands, setPendingDemands] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -32,6 +33,28 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setPendingDemands(0);
+      return;
+    }
+    const fetchCount = async () => {
+      const { count } = await (supabase as any)
+        .from("demands")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "aguardando");
+      setPendingDemands(count || 0);
+    };
+    fetchCount();
+    const channel = supabase
+      .channel("demands-header-count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "demands" }, fetchCount)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -67,10 +90,19 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
                   <Button
                     variant="outline"
                     onClick={() => navigate(onDemands ? "/" : "/demandas")}
-                    className="gap-2 border-primary/40 hover:bg-primary/10"
+                    className="gap-2 border-primary/40 hover:bg-primary/10 relative"
                   >
                     {onDemands ? <BookOpen className="h-4 w-4" /> : <ListChecks className="h-4 w-4" />}
                     <span className="hidden sm:inline">{onDemands ? "Cards de Conhecimento" : "Demandas"}</span>
+                    {!onDemands && pendingDemands > 0 && (
+                      <span
+                        className="demand-badge absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center gap-0.5 border-2 border-background"
+                        aria-label={`${pendingDemands} demandas pendentes`}
+                      >
+                        <AlertCircle className="h-2.5 w-2.5" />
+                        {pendingDemands}
+                      </span>
+                    )}
                   </Button>
                 );
               })()}

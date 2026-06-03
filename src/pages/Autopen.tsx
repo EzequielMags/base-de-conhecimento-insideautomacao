@@ -171,7 +171,7 @@ export default function Autopen() {
     isAdmin || (isEditor && driver.user_id === user?.id);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col">

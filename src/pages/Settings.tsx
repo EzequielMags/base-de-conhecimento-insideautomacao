@@ -14,9 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/AvatarCropDialog";
-import { Camera } from "lucide-react";
+import { Camera, Palette, Sparkles } from "lucide-react";
+import { useThemeSkin, ThemeSkin } from "@/hooks/use-theme-skin";
 
-type SettingsTab = "conta" | "usuarios";
+type SettingsTab = "conta" | "usuarios" | "temas";
 
 interface ManagedUser {
   id: string;
@@ -197,8 +198,28 @@ const Settings = () => {
     }
   };
 
+  const { skin, setSkin } = useThemeSkin();
+
+  const themeOptions: { id: ThemeSkin; name: string; description: string; preview: string }[] = [
+    {
+      id: "default",
+      name: "Clássico",
+      description: "Visual padrão limpo, com cards sólidos e cantos suaves.",
+      preview:
+        "linear-gradient(135deg, hsl(25 30% 8%), hsl(25 25% 14%)), radial-gradient(circle at 30% 30%, hsl(30 100% 50% / 0.25), transparent 50%)",
+    },
+    {
+      id: "aurora",
+      name: "Aurora",
+      description: "Glassmorphism com brilho neon laranja e grade circuito ao fundo.",
+      preview:
+        "radial-gradient(ellipse at 0% 0%, hsl(30 100% 50% / 0.5), transparent 50%), radial-gradient(ellipse at 100% 100%, hsl(30 100% 50% / 0.4), transparent 50%), linear-gradient(135deg, hsl(240 30% 8%), hsl(240 35% 5%))",
+    },
+  ];
+
   const sidebarItems: { key: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { key: "conta", label: "Conta", icon: <User className="h-4 w-4" /> },
+    { key: "temas", label: "Temas", icon: <Palette className="h-4 w-4" /> },
     ...(isAdmin ? [{ key: "usuarios" as SettingsTab, label: "Usuários", icon: <Users className="h-4 w-4" /> }] : []),
   ];
 

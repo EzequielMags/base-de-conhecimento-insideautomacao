@@ -21,6 +21,7 @@ import { SintegraProvider } from "./components/SintegraContext";
 import { SintegraPanel } from "./components/SintegraPanel";
 import { AppShell } from "./components/AppShell";
 import { FloatingMusicPlayer } from "./components/FloatingMusicPlayer";
+import { UpdateNotes } from "./components/UpdateNotes";
 import { PrivateRoute } from "./components/PrivateRoute";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
             <IntegriChatPanel />
             <SintegraPanel />
             <FloatingMusicPlayer />
+            <UpdateNotes />
           </SintegraProvider>
         </IntegriChatProvider>
       </BrowserRouter>

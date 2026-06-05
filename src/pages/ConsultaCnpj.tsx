@@ -150,11 +150,8 @@ const ConsultaCnpj = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
 
-        <div
-          className={`flex-1 flex flex-col transition-all duration-300 ${
-            chatOpen || sintegraOpen ? "md:mr-[40vw]" : ""
-          }`}
-        >
+        <div className="flex-1 flex flex-col">
+
           <Header onNewCard={() => {}} canCreate={false} />
 
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">

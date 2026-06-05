@@ -215,6 +215,20 @@ const Settings = () => {
       preview:
         "radial-gradient(ellipse at 0% 0%, hsl(30 100% 50% / 0.5), transparent 50%), radial-gradient(ellipse at 100% 100%, hsl(30 100% 50% / 0.4), transparent 50%), linear-gradient(135deg, hsl(240 30% 8%), hsl(240 35% 5%))",
     },
+    {
+      id: "blood",
+      name: "Blood",
+      description: "Vermelho profundo sobre preto carbono, atmosfera intensa.",
+      preview:
+        "radial-gradient(ellipse at 20% 10%, hsl(0 90% 45% / 0.55), transparent 55%), radial-gradient(ellipse at 100% 100%, hsl(0 90% 30% / 0.4), transparent 60%), linear-gradient(160deg, hsl(0 40% 6%), hsl(0 50% 3%))",
+    },
+    {
+      id: "midnight",
+      name: "Midnight",
+      description: "Preto puro com traços azul marinho, elegante e técnico.",
+      preview:
+        "radial-gradient(ellipse at 20% 10%, hsl(215 90% 40% / 0.55), transparent 55%), radial-gradient(ellipse at 100% 100%, hsl(220 90% 30% / 0.4), transparent 60%), linear-gradient(160deg, hsl(0 0% 4%), hsl(220 30% 3%))",
+    },
   ];
 
   const sidebarItems: { key: SettingsTab; label: string; icon: React.ReactNode }[] = [

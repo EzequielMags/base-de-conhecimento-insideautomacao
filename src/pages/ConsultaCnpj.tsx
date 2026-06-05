@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useIntegriChat } from "@/components/IntegriChatContext";
+
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -71,7 +71,6 @@ interface CnpjData {
 }
 
 const ConsultaCnpj = () => {
-  const { open: chatOpen } = useIntegriChat();
   const { open: sintegraOpen, toggle: toggleSintegra } = useSintegra();
   const [cnpj, setCnpj] = useState("");
   const [loading, setLoading] = useState(false);
@@ -150,11 +149,8 @@ const ConsultaCnpj = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
 
-        <div
-          className={`flex-1 flex flex-col transition-all duration-300 ${
-            chatOpen || sintegraOpen ? "md:mr-[40vw]" : ""
-          }`}
-        >
+        <div className="flex-1 flex flex-col">
+
           <Header onNewCard={() => {}} canCreate={false} />
 
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-card/50">

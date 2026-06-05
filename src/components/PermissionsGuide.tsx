@@ -3,10 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Edit, Crown, X, Shield, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserRole } from "@/hooks/use-user-role";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export const PermissionsGuide = () => {
   const [open, setOpen] = useState(false);
-  const { isAdmin, isEditor, isVisitor, loading } = useUserRole();
+  const { isAdmin, isEditor, loading } = useUserRole();
+  // Read sidebar state so the launcher follows the sidebar (icon-only when collapsed)
+  let sidebarCollapsed = false;
+  try {
+    const { state } = useSidebar();
+    sidebarCollapsed = state === "collapsed";
+  } catch {
+    sidebarCollapsed = false;
+  }
 
   const currentRole = isAdmin
     ? { label: "ADMIN", icon: Crown, color: "text-primary", bg: "bg-primary/10" }
@@ -44,11 +53,16 @@ export const PermissionsGuide = () => {
       {!open && (
         <Button
           variant="outline"
-          size="sm"
+          size={sidebarCollapsed ? "icon" : "sm"}
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 left-6 z-30 gap-2 shadow-lg"
+          aria-label="Guia de Permissões"
+          title="Guia de Permissões"
+          className={`fixed bottom-6 left-3 z-30 shadow-lg transition-all duration-300 ${
+            sidebarCollapsed ? "h-9 w-9 rounded-full" : "gap-2"
+          }`}
         >
-          <Shield className="h-4 w-4" /> Guia de Permissões
+          <Shield className="h-4 w-4" />
+          {!sidebarCollapsed && <span>Guia de Permissões</span>}
         </Button>
       )}
 
@@ -59,7 +73,7 @@ export const PermissionsGuide = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-6 left-6 z-30 w-80 rounded-lg border bg-card text-card-foreground shadow-xl"
+            className="fixed bottom-6 left-3 z-30 w-80 rounded-lg border bg-card text-card-foreground shadow-xl"
           >
             <div className="flex items-center justify-between px-4 py-2 border-b">
               <div className="flex items-center gap-2">

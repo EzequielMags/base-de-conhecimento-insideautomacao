@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
-export type ThemeSkin = "default" | "aurora";
+export type ThemeSkin = "default" | "aurora" | "blood" | "midnight";
 
 const STORAGE_KEY = "app:theme-skin";
 const EVENT = "app:theme-skin-change";
-const SKINS: ThemeSkin[] = ["default", "aurora"];
+const SKINS: ThemeSkin[] = ["default", "aurora", "blood", "midnight"];
 
 function applySkin(skin: ThemeSkin) {
   const root = document.documentElement;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useIntegriChat } from "@/components/IntegriChatContext";
+
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -71,7 +71,6 @@ interface CnpjData {
 }
 
 const ConsultaCnpj = () => {
-  const { open: chatOpen } = useIntegriChat();
   const { open: sintegraOpen, toggle: toggleSintegra } = useSintegra();
   const [cnpj, setCnpj] = useState("");
   const [loading, setLoading] = useState(false);

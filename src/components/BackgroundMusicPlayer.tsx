@@ -132,12 +132,7 @@ export const BackgroundMusicPlayer = () => {
     if (!p || !ready) return;
     const t = TRACKS[idx];
     try {
-      if (t.search) {
-        p.loadPlaylist?.({ list: t.search, listType: "search" });
-      } else if (t.videoId) {
-        p.loadVideoById({ videoId: t.videoId });
-      }
-      // Re-set loop playlist after load
+      p.loadVideoById({ videoId: t.videoId });
       setTimeout(() => {
         try {
           p.setLoop?.(true);

@@ -1,13 +1,14 @@
-import { Moon, Sun, Plus, LogOut, LogIn, Settings, ListChecks, BookOpen, AlertCircle } from "lucide-react";
+import { Moon, Sun, Plus, LogIn, ListChecks, BookOpen, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
+import { UserMenu } from "@/components/UserMenu";
+import { useThemeLogoFilter } from "@/hooks/use-theme-logo";
 
 interface HeaderProps {
   onNewCard: () => void;

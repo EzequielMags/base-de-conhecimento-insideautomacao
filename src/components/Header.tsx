@@ -72,7 +72,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.2 }}
         >
-          <img src={logo} alt="Inside Automação" className="h-12 object-contain" />
+          <img src={logo} alt="Inside Automação" className="h-12 object-contain transition-[filter] duration-500" style={{ filter: logoFilter }} />
         </motion.div>
         
         <div className="flex items-center gap-2">
@@ -107,24 +107,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
                 </Button>
               )}
               
-              <Button
-                variant="outline"
-                onClick={() => navigate("/settings")}
-                className="gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Configurações</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
-            </>
+              <UserMenu />
           ) : (
             <Button
               onClick={() => navigate("/auth")}

@@ -1,13 +1,14 @@
-import { Moon, Sun, Plus, LogOut, LogIn, Settings, ListChecks, BookOpen, AlertCircle } from "lucide-react";
+import { Moon, Sun, Plus, LogIn, ListChecks, BookOpen, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
+import { UserMenu } from "@/components/UserMenu";
+import { useThemeLogoFilter } from "@/hooks/use-theme-logo";
 
 interface HeaderProps {
   onNewCard: () => void;
@@ -18,7 +19,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  const logoFilter = useThemeLogoFilter();
   const [user, setUser] = useState<any>(null);
   const [pendingDemands, setPendingDemands] = useState(0);
 
@@ -56,14 +57,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
     };
   }, [user]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Logout realizado",
-      description: "Até logo!"
-    });
-    navigate("/auth");
-  };
+  // Logout handled inside UserMenu
 
   return (
     <motion.header 
@@ -78,7 +72,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.2 }}
         >
-          <img src={logo} alt="Inside Automação" className="h-12 object-contain" />
+          <img src={logo} alt="Inside Automação" className="h-12 object-contain transition-[filter] duration-500" style={{ filter: logoFilter }} />
         </motion.div>
         
         <div className="flex items-center gap-2">
@@ -113,23 +107,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
                 </Button>
               )}
               
-              <Button
-                variant="outline"
-                onClick={() => navigate("/settings")}
-                className="gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Configurações</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
+              <UserMenu />
             </>
           ) : (
             <Button

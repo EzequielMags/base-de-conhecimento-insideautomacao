@@ -1,4 +1,4 @@
-import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2 } from "lucide-react";
+import { LayoutGrid, FileType, Store, Code2, Palette, FileBox, Printer, PenTool, Building2, FolderOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -39,6 +39,7 @@ export function AppSidebar() {
     { label: "Impressoras", icon: Printer, path: "/impressoras" },
     { label: "AUTOPEN", icon: PenTool, path: "/autopen" },
     { label: "Consulta CNPJ", icon: Building2, path: "/consulta-cnpj" },
+    { label: "Minha Pasta", icon: FolderOpen, path: "/minha-pasta" },
   ];
 
   return (

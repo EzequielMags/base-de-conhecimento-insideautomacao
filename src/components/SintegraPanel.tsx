@@ -1,13 +1,30 @@
+import { useEffect, useRef, useState } from "react";
 import { useSintegra } from "./SintegraContext";
-import { X, FileSearch, ExternalLink } from "lucide-react";
+import { X, FileSearch, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SINTEGRA_URL =
-  "https://www.cadesp.fazenda.sp.gov.br/(S(nzduokzapvx4fojdm2zljsyz))/Pages/Cadastro/Consultas/ConsultaPublica/ConsultaPublica.aspx";
+  "https://www.cadesp.fazenda.sp.gov.br/Pages/Cadastro/Consultas/ConsultaPublica/ConsultaPublica.aspx";
 
 export const SintegraPanel = () => {
   const { open, close } = useSintegra();
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setLoaded(false);
+      setBlocked(false);
+      return;
+    }
+    // If onload doesn't fire within 6s the site likely blocked the iframe.
+    const t = setTimeout(() => {
+      if (!loaded) setBlocked(true);
+    }, 6000);
+    return () => clearTimeout(t);
+  }, [open, loaded]);
 
   return (
     <AnimatePresence>
@@ -27,12 +44,7 @@ export const SintegraPanel = () => {
               <span className="text-sm font-semibold">Sintegra SP</span>
             </div>
             <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                aria-label="Abrir em nova aba"
-              >
+              <Button variant="ghost" size="icon" asChild aria-label="Abrir em nova aba">
                 <a href={SINTEGRA_URL} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-4 w-4" />
                 </a>
@@ -42,11 +54,34 @@ export const SintegraPanel = () => {
               </Button>
             </div>
           </div>
-          <iframe
-            src={SINTEGRA_URL}
-            title="Sintegra SP"
-            className="flex-1 w-full border-0 bg-white"
-          />
+
+          <div className="flex-1 relative bg-white">
+            <iframe
+              ref={iframeRef}
+              src={SINTEGRA_URL}
+              title="Sintegra SP"
+              className="absolute inset-0 w-full h-full border-0 bg-white"
+              onLoad={() => setLoaded(true)}
+              referrerPolicy="no-referrer"
+            />
+            {blocked && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card text-center p-6">
+                <AlertTriangle className="h-10 w-10 text-amber-500" />
+                <div>
+                  <p className="font-semibold">O Sintegra bloqueia visualização embutida</p>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                    O portal da Fazenda/SP não permite ser exibido dentro de outros sites.
+                    Abra em uma nova aba para utilizá-lo normalmente.
+                  </p>
+                </div>
+                <Button asChild className="gap-2">
+                  <a href={SINTEGRA_URL} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" /> Abrir Sintegra em nova aba
+                  </a>
+                </Button>
+              </div>
+            )}
+          </div>
         </motion.aside>
       )}
     </AnimatePresence>

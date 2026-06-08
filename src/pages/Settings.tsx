@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,8 @@ const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const Settings = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as SettingsTab) || "conta";
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -43,7 +45,7 @@ const Settings = () => {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<SettingsTab>("conta");
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);

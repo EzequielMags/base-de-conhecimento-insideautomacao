@@ -14,6 +14,7 @@ import Autopen from "./pages/Autopen";
 import Settings from "./pages/Settings";
 import ConsultaCnpj from "./pages/ConsultaCnpj";
 import Demands from "./pages/Demands";
+import MinhaPasta from "./pages/MinhaPasta";
 import { HoverSoundEffect } from "./components/HoverSoundEffect";
 import { IntegriChatProvider } from "./components/IntegriChatContext";
 import { IntegriChatPanel } from "./components/IntegriChatPanel";
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/consulta-cnpj" element={<PrivateRoute><ConsultaCnpj /></PrivateRoute>} />
                 <Route path="/demandas" element={<PrivateRoute><Demands /></PrivateRoute>} />
                 <Route path="/finalizados" element={<PrivateRoute><Demands finalized /></PrivateRoute>} />
+                <Route path="/minha-pasta" element={<PrivateRoute><MinhaPasta /></PrivateRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

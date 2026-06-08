@@ -6,16 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Track =
-  | { id: string; label: string; videoId: string; search?: undefined }
-  | { id: string; label: string; videoId?: undefined; search: string };
+type Track = { id: string; label: string; videoId: string };
 
 const TRACKS: Track[] = [
   { id: "track1", label: "Ambient Foco", videoId: "EUIOgd_CNl4" },
   { id: "track2", label: "Chill Synth", videoId: "qmbAxI2wsAU" },
   { id: "track3", label: "Lo-Fi Vibe", videoId: "EUIOgd_CNl4" },
   { id: "track4", label: "Tiësto - The Business", videoId: "4x2S3LhbM0k" },
-  { id: "track5", label: "Me Leva - Latino", search: "Latino Me Leva oficial" },
+  { id: "track5", label: "Me Leva - Latino", videoId: "HQqPL2ednpQ" },
 ];
 
 declare global {

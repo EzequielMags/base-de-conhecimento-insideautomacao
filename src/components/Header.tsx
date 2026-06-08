@@ -19,7 +19,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  const logoFilter = useThemeLogoFilter();
   const [user, setUser] = useState<any>(null);
   const [pendingDemands, setPendingDemands] = useState(0);
 
@@ -57,14 +57,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
     };
   }, [user]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Logout realizado",
-      description: "Até logo!"
-    });
-    navigate("/auth");
-  };
+  // Logout handled inside UserMenu
 
   return (
     <motion.header 

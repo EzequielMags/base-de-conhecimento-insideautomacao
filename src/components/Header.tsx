@@ -108,6 +108,7 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
               )}
               
               <UserMenu />
+            </>
           ) : (
             <Button
               onClick={() => navigate("/auth")}

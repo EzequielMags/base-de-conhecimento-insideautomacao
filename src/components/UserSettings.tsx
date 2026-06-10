@@ -38,6 +38,7 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
+  const [verifyingUserId, setVerifyingUserId] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
 

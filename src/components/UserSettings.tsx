@@ -240,6 +240,7 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
                         <TableRow>
                           <TableHead>Email / Nome</TableHead>
                           <TableHead>Cargo Atual</TableHead>
+                          <TableHead>Verificação</TableHead>
                           <TableHead>Novo Cargo</TableHead>
                           <TableHead className="text-right">Ação</TableHead>
                         </TableRow>
@@ -257,6 +258,26 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
                               <Badge variant={u.role === "admin" ? "default" : u.role === "user" ? "secondary" : "outline"}>
                                 {roleLabel(u.role)}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {u.isVerified ? (
+                                <Badge variant="secondary" className="bg-green-500/15 text-green-600 border-green-500/30">
+                                  Verificada
+                                </Badge>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                                  disabled={verifyingUserId === u.id}
+                                  onClick={() => handleVerifyUser(u)}
+                                >
+                                  {verifyingUserId === u.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : null}
+                                  Liberar conta
+                                </Button>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Select

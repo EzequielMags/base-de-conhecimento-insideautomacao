@@ -210,12 +210,28 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!title.trim() || !description.trim()) {
+
+    // Schema validation with zod
+    const { z } = await import("zod");
+    const cardSchema = z.object({
+      title: z.string().trim().min(3, "Título deve ter no mínimo 3 caracteres").max(200, "Título deve ter no máximo 200 caracteres"),
+      description: z.string().trim().min(5, "Descrição deve ter no mínimo 5 caracteres").max(10000, "Descrição muito longa (máx. 10.000 caracteres)"),
+      authorName: z.string().trim().max(120, "Nome do autor muito longo").optional(),
+      coverImage: z.string().trim().max(2048, "URL da capa muito longa").optional(),
+    });
+
+    const parsed = cardSchema.safeParse({
+      title,
+      description,
+      authorName: authorName || undefined,
+      coverImage: coverImage || undefined,
+    });
+
+    if (!parsed.success) {
       toast({
-        title: "Erro",
-        description: "Título e descrição são obrigatórios",
-        variant: "destructive"
+        title: "Erro de validação",
+        description: parsed.error.errors[0]?.message ?? "Dados inválidos",
+        variant: "destructive",
       });
       return;
     }
@@ -223,14 +239,14 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
     setLoading(true);
     try {
       await onSave({
-        title,
-        description,
+        title: parsed.data.title,
+        description: parsed.data.description,
         category,
         files,
         videos,
         images: [], // Mantemos compatibilidade
-        author_name: authorName,
-        cover_image: coverImage
+        author_name: parsed.data.authorName ?? "",
+        cover_image: parsed.data.coverImage ?? ""
       } as any);
       
       toast({

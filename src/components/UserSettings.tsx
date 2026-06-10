@@ -23,6 +23,7 @@ interface ManagedUser {
   email: string | null;
   role: AppRole;
   pendingRole: AppRole;
+  isVerified: boolean;
 }
 
 const roleLabel = (r: AppRole) =>

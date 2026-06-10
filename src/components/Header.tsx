@@ -107,7 +107,9 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
                   <span className="hidden sm:inline">Novo Card</span>
                 </Button>
               )}
-              
+
+              <NotificationBell />
+
               <UserMenu />
             </>
           ) : (

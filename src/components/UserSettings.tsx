@@ -70,6 +70,7 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
         email: u.email,
         role: u.role as AppRole,
         pendingRole: u.role as AppRole,
+        isVerified: !!u.is_verified,
       }));
       setUsers(merged);
     } catch (e: any) {

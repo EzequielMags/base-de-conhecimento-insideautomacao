@@ -191,6 +191,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           id: string
+          is_verified: boolean
           name: string
         }
         Insert: {
@@ -198,6 +199,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           id: string
+          is_verified?: boolean
           name: string
         }
         Update: {
@@ -205,6 +207,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           id?: string
+          is_verified?: boolean
           name?: string
         }
         Relationships: []
@@ -364,6 +367,7 @@ export type Database = {
           avatar_url: string
           email: string
           id: string
+          is_verified: boolean
           name: string
           role: Database["public"]["Enums"]["app_role"]
         }[]
@@ -375,6 +379,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_verify_user: { Args: { _user_id: string }; Returns: undefined }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -386,6 +391,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_account_verified: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "read"

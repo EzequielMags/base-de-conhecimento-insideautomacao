@@ -23,6 +23,7 @@ interface ManagedUser {
   email: string | null;
   role: AppRole;
   pendingRole: AppRole;
+  isVerified: boolean;
 }
 
 const roleLabel = (r: AppRole) =>
@@ -37,6 +38,7 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
+  const [verifyingUserId, setVerifyingUserId] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
 
@@ -68,6 +70,7 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
         email: u.email,
         role: u.role as AppRole,
         pendingRole: u.role as AppRole,
+        isVerified: !!u.is_verified,
       }));
       setUsers(merged);
     } catch (e: any) {
@@ -101,6 +104,22 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
       setSavingUserId(null);
     }
   };
+
+  const handleVerifyUser = async (u: ManagedUser) => {
+    setVerifyingUserId(u.id);
+    try {
+      const { error } = await supabase.rpc("admin_verify_user", { _user_id: u.id });
+      if (error) throw error;
+      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, isVerified: true } : x));
+      toast({ title: "Conta liberada", description: `${u.email || u.name} agora tem acesso completo.` });
+    } catch (e: any) {
+      console.error("admin_verify_user error", e);
+      toast({ title: "Erro", description: e.message || "Não foi possível liberar.", variant: "destructive" });
+    } finally {
+      setVerifyingUserId(null);
+    }
+  };
+
 
   const handleUpdateProfile = async () => {
     setLoading(true);
@@ -221,6 +240,7 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
                         <TableRow>
                           <TableHead>Email / Nome</TableHead>
                           <TableHead>Cargo Atual</TableHead>
+                          <TableHead>Verificação</TableHead>
                           <TableHead>Novo Cargo</TableHead>
                           <TableHead className="text-right">Ação</TableHead>
                         </TableRow>
@@ -238,6 +258,26 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
                               <Badge variant={u.role === "admin" ? "default" : u.role === "user" ? "secondary" : "outline"}>
                                 {roleLabel(u.role)}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {u.isVerified ? (
+                                <Badge variant="secondary" className="bg-green-500/15 text-green-600 border-green-500/30">
+                                  Verificada
+                                </Badge>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                                  disabled={verifyingUserId === u.id}
+                                  onClick={() => handleVerifyUser(u)}
+                                >
+                                  {verifyingUserId === u.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : null}
+                                  Liberar conta
+                                </Button>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Select

@@ -9,6 +9,7 @@ import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
 import { UserMenu } from "@/components/UserMenu";
 import { useThemeLogoFilter } from "@/hooks/use-theme-logo";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface HeaderProps {
   onNewCard: () => void;
@@ -106,7 +107,9 @@ export const Header = ({ onNewCard, canCreate = true }: HeaderProps) => {
                   <span className="hidden sm:inline">Novo Card</span>
                 </Button>
               )}
-              
+
+              <NotificationBell />
+
               <UserMenu />
             </>
           ) : (

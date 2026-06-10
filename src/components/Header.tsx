@@ -9,6 +9,7 @@ import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
 import { UserMenu } from "@/components/UserMenu";
 import { useThemeLogoFilter } from "@/hooks/use-theme-logo";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface HeaderProps {
   onNewCard: () => void;

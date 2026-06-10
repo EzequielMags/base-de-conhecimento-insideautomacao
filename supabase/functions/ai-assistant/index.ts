@@ -12,17 +12,44 @@ serve(async (req) => {
   }
 
   try {
+    // --- AuthN: require a valid Supabase user ---
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    const authedClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: userError } = await authedClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { message } = await req.json();
-    console.log("Mensagem recebida:", message);
+    if (typeof message !== 'string' || message.trim().length === 0 || message.length > 4000) {
+      return new Response(JSON.stringify({ error: 'Invalid message' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY não configurada');
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, serviceKey);
 
     const { data: cards, error: cardsError } = await supabase
       .from('cards')
@@ -30,6 +57,11 @@ serve(async (req) => {
       .order('created_at', { ascending: false });
 
     if (cardsError) throw cardsError;
+
+    console.log('AI request received', {
+      timestamp: new Date().toISOString(),
+      cardsCount: cards?.length ?? 0,
+    });
 
     const cardsContext = cards?.map((card) =>
       `ID: ${card.id}\nTítulo: ${card.title}\nCategoria: ${card.category}\nSolução: ${card.description}`
@@ -72,15 +104,13 @@ Seja direto, amigável e útil.`
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Erro da API:', response.status, errorText);
+      console.error('AI gateway error', response.status);
       throw new Error(`Erro da API: ${response.status}`);
     }
 
     const data = await response.json();
     const fullText: string = data.choices[0].message.content || "";
 
-    // Extrair IDs sugeridos
     const idsMatch = fullText.match(/SUGGESTED_CARD_IDS:\s*\[([^\]]*)\]/i);
     let suggestedIds: string[] = [];
     if (idsMatch) {
@@ -107,10 +137,9 @@ Seja direto, amigável e útil.`
     );
 
   } catch (error) {
-    console.error('Erro na função:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('ai-assistant error');
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Internal error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

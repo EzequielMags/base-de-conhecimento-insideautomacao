@@ -1,70 +1,71 @@
-# Plano de implementação
+# Plano de atualizações
 
-## 1) Otimização (navegação, carregamento inicial, animações)
+## 1. Otimização (prioridade máxima)
 
-**Causas atuais:**
-- Cada página recarrega `Header`, `AppSidebar`, `SidebarProvider` do zero
-- Imports síncronos de todas as páginas no `App.tsx` inflam o bundle inicial
-- Skins usam gradientes/blur pesados aplicados globalmente
-- Várias animações em loop (pulses, bounces) sempre ativas
-- Re-renders por contexto (Theme/Skin) propagam pra tudo
+**Causa raiz da lentidão**: o site re-renderiza tudo a cada troca de rota porque o `AppShell` (sidebar, header, providers) está dentro do `<Routes>`, e os efeitos das skins usam `backdrop-blur`, partículas e transições pesadas em elementos animados.
 
-**Mudanças:**
-- `App.tsx`: converter rotas para `React.lazy` + `Suspense`, mantendo Auth/Index eager
-- Criar layout pai `<AppLayout>` (SidebarProvider + AppSidebar + Header) usado via `<Outlet/>` para evitar remount a cada rota
-- Reduzir blur/saturate dos skins (`backdrop-blur-xl` → `md`, remover `saturate(1.5)`)
-- `framer-motion`: trocar imports default por `motion/react` lazy onde for animação pontual; remover animações infinitas fora da viewport (`whileInView`)
-- `useThemeSkin`/`useTheme`: memoizar value e mover persistência pra debounce
-- Remover `HoverSoundEffect` global ou só pré-carregar áudio quando necessário
-- Adicionar `loading="lazy"` em imagens de cards
-- `vite.config`: ativar manualChunks separando recharts/jszip/framer-motion
+**Ações**:
+- Code-splitting com `React.lazy` em todas as rotas (`/pdfs-tecnicos`, `/scripts`, `/skins`, `/banco-lojas`, etc.). Só a rota visitada baixa o JS.
+- Memoizar `CardForm`, `CardGrid` e `SolutionCard` com `React.memo` + `useCallback` nos handlers, e mover a busca do perfil do autor para fora do dialog (cache no `useUserRole`). Isso resolve a lentidão ao digitar no Novo Card.
+- Reduzir animações das skins: trocar `backdrop-blur-xl` por `bg-card/95` simples, remover partículas em loop infinito e cortar `transition-all` longos. Manter apenas `fade-in` curto.
+- Adicionar `manualChunks` no `vite.config.ts` separando `react`, `@radix-ui`, `framer-motion` e `supabase` em bundles próprios — primeiro carregamento bem mais rápido.
 
-## 2) Minha Pasta — visual Windows Explorer + cópia real
+## 2. Music player
 
-- Substituir o grid de cards por **tabela** (`<table>`) com colunas:
-  - Ícone + Nome | Data de modificação | Tipo | Tamanho
-  - Hover/seleção igual Explorer escuro (linha destacada)
-  - Click = seleciona; duplo-click = abrir (preview/download); botão direito = menu (Copiar, Baixar, Excluir, Copiar link)
-- Toolbar superior compacta (Voltar, Novo, Upload, Excluir, Buscar à direita)
-- **Copiar arquivo real**: substituir `handleCopyFile` por estratégia que:
-  - Imagens → `ClipboardItem` com o blob real (já funciona)
-  - PDF/texto/outros → tenta `ClipboardItem` com mime nativo (Chromium suporta); se falhar (Firefox/Safari), **baixa automaticamente o arquivo** com toast "Arquivo baixado — navegador não permite copiar este tipo direto"
-  - Remove o erro toast atual; sempre conclui com sucesso (cópia OU download silencioso)
-- Adicionar suporte a arrastar arquivo da página pro Explorer do Windows (atributo `draggable` + `DownloadURL` no `dragstart`)
+- Remover as músicas pré-cadastradas e o seletor antigo.
+- Player flutuante fica embaixo à direita (já está), com **ícone de onda sonora** 🌊 fechado.
+- Ao clicar, abre um pop-over compacto com:
+  - Input "Cole um link do YouTube"
+  - Botão Play/Pause, próximo, volume
+  - Histórico curto de URLs já coladas (localStorage)
+- Player usa YouTube IFrame API escondida, áudio continua tocando ao trocar de aba (já é montado uma vez no `App.tsx`).
 
-## 3) Verificação por código no 1º login
+## 3. Verificação de conta (aprovação por admin)
 
-**Banco:**
-- Coluna `profiles.email_verified BOOLEAN DEFAULT false`
-- Tabela `email_verifications`: user_id, code_hash, expires_at, attempts, status
-- Marcar admins (`henrique@`, `ezequielmagoga07@`) como `email_verified = true` automaticamente para não travarem
-- Demais contas existentes: `email_verified = false` (terão que verificar 1x conforme pedido)
-- RPCs: `request_verification_code()` (gera código, salva hash, retorna ok), `verify_email_code(code)` (valida e marca profile)
+**Sem e-mail, sem código — admin libera direto no painel.**
 
-**Edge function `send-verification-code`:**
-- Recebe user_id da sessão
-- Gera código de 6 dígitos
-- Salva hash via RPC
-- Envia e-mail HTML para `suporte@insideautomacao.com.br` com: nome, e-mail do solicitante, código, validade 15 min
-- Usa conector **Resend** (remetente `onboarding@resend.dev` — funciona sem domínio próprio)
+Backend:
+- Nova coluna `is_verified boolean default false` em `profiles` (admins já existentes ficam `true` por migração).
+- RPC `admin_verify_user(_user_id uuid)` (SECURITY DEFINER, checa `has_role(auth.uid(),'admin')`) que seta `is_verified = true`.
+- Políticas das tabelas de escrita (cards, demands, repository_files, etc.) passam a exigir `is_verified = true` além dos roles atuais — usuários não verificados podem ler, mas não criam/editam nada.
 
-**Frontend:**
-- Novo componente `EmailVerificationGate` envolvendo `PrivateRoute`
-- Ao logar: consulta `profiles.email_verified`; se false → tela bloqueante com:
-  - Botão "Enviar código para suporte@insideautomacao.com.br"
-  - Input de 6 dígitos + botão "Verificar"
-  - Link "Reenviar" (cooldown 60s)
-- Após verificar com sucesso → libera o app permanentemente
+Frontend:
+- Componente `AccountVerificationGate` global: bloqueia a tela inicial com um pop-up **não-dismissível** se `is_verified = false`.
+  - Texto: "Sua conta está aguardando liberação por um administrador."
+  - Botão **"Verificar conta"**: re-consulta o status; se já liberado, mostra "Conta verificada! Bem-vindo." e fecha; se não, mostra "Os administradores ainda estão analisando sua conta."
+  - O pop-up volta a aparecer mesmo após reload enquanto `is_verified=false`.
+- Painel admin (Gerenciamento de usuários, dentro da página atual): cada linha de usuário ganha um badge "Não verificado" + botão **"Liberar conta"** (verde). Clicar chama o RPC e atualiza a lista.
+- Admins (e-mails henrique@ e ezequielmagoga07@) já entram verificados.
 
-## Pré-requisito do usuário
-Você precisará **conectar o Resend** (workspace connector). Vou disparar o picker — basta autorizar; sem ele a função de envio não funciona. Se preferir outro provedor (ex: domínio próprio via Lovable Emails), me avise.
+## 4. Update notes → sino de notificações
 
-## Ordem de execução
-1. Conectar Resend
-2. Migração (verificação + grants + admins liberados)
-3. Edge function `send-verification-code`
-4. Frontend: `EmailVerificationGate`
-5. Refator Minha Pasta (tabela + cópia)
-6. Otimizações (lazy routes, layout pai, skins mais leves, vite chunks)
+Trocar o pop-up atual por um ícone 🔔 no header (canto direito) com badge de não-lidos. Click abre dropdown com as últimas notas; "lido" salvo no localStorage.
 
-Responda **aprovado** para eu executar, ou ajuste o que quiser mudar.
+## Plano técnico resumido
+
+```text
+DB:
+  ALTER profiles ADD is_verified boolean default false
+  UPDATE profiles SET is_verified=true WHERE id IN (admins existentes)
+  CREATE FUNCTION admin_verify_user(_user_id uuid) ...
+  Ajustar policies INSERT/UPDATE das tabelas de conteúdo p/ exigir is_verified
+
+Frontend:
+  src/App.tsx                → React.lazy + <Suspense>
+  vite.config.ts             → manualChunks
+  src/components/CardForm    → memo + handlers estáveis
+  src/hooks/use-theme-skin   → remover blur/partículas pesadas
+  src/components/FloatingMusicPlayer + BackgroundMusicPlayer → reescrever
+                              com YouTube IFrame + popover
+  src/components/AccountVerificationGate (novo)
+  src/components/UserSettings (já admin panel) → botão Liberar conta
+  src/components/UpdateNotes → vira NotificationBell no Header
+```
+
+## O que não vou mexer
+
+- Esquema de roles (admin/user/read) e regras de signup por domínio continuam iguais.
+- Conteúdo das tabelas existentes não é apagado.
+- Buckets públicos continuam públicos (mudar quebraria as imagens).
+
+Confirma para eu aplicar tudo de uma vez?

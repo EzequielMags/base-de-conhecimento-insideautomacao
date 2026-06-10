@@ -105,6 +105,22 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
     }
   };
 
+  const handleVerifyUser = async (u: ManagedUser) => {
+    setVerifyingUserId(u.id);
+    try {
+      const { error } = await supabase.rpc("admin_verify_user", { _user_id: u.id });
+      if (error) throw error;
+      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, isVerified: true } : x));
+      toast({ title: "Conta liberada", description: `${u.email || u.name} agora tem acesso completo.` });
+    } catch (e: any) {
+      console.error("admin_verify_user error", e);
+      toast({ title: "Erro", description: e.message || "Não foi possível liberar.", variant: "destructive" });
+    } finally {
+      setVerifyingUserId(null);
+    }
+  };
+
+
   const handleUpdateProfile = async () => {
     setLoading(true);
     try {

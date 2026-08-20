@@ -16,14 +16,40 @@ interface SolutionCardProps {
   onView: (card: CardType) => void;
   canEdit?: boolean;
   canDelete?: boolean;
+  canRequestDelete?: boolean;
+  onRequestDelete?: (id: string) => void;
+  onCancelDelete?: (id: string) => void;
   isPinned?: boolean;
 }
 
-export const SolutionCard = ({ card, onEdit, onDelete, onView, canEdit = true, canDelete = true, isPinned = false }: SolutionCardProps) => {
+const DELETE_GRACE_MS = 2 * 60 * 60 * 1000;
+
+const formatRemaining = (ms: number) => {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+};
+
+export const SolutionCard = ({ card, onEdit, onDelete, onView, canEdit = true, canDelete = true, canRequestDelete = false, onRequestDelete, onCancelDelete, isPinned = false }: SolutionCardProps) => {
   const firstImage = card.files?.find(f => f.type.startsWith('image/'));
   const firstVideo = card.videos?.[0];
   const coverImage = (card as any).cover_image;
   const [creatorName, setCreatorName] = useState<string>("");
+  const scheduledAt = card.delete_requested_at ? new Date(card.delete_requested_at).getTime() : null;
+  const [remaining, setRemaining] = useState<number | null>(
+    scheduledAt ? scheduledAt + DELETE_GRACE_MS - Date.now() : null
+  );
+
+  useEffect(() => {
+    if (!scheduledAt) { setRemaining(null); return; }
+    const tick = () => setRemaining(scheduledAt + DELETE_GRACE_MS - Date.now());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [scheduledAt]);
+
 
   useEffect(() => {
     const fetchCreatorName = async () => {

@@ -33,4 +33,6 @@ export interface Card {
   created_at: string;
   updated_at: string;
   user_id: string;
+  delete_requested_at?: string | null;
+  delete_requested_by?: string | null;
 }

@@ -250,7 +250,7 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
                           <TableRow key={u.id}>
                             <TableCell>
                               <div className="flex flex-col">
-                                <span className="font-medium text-sm">{u.email || "—"}</span>
+                                <span className="font-medium text-sm">{maskEmail(u.email)}</span>
                                 <span className="text-xs text-muted-foreground">{u.name}</span>
                               </div>
                             </TableCell>

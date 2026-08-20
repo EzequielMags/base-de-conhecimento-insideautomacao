@@ -29,6 +29,19 @@ interface ManagedUser {
 const roleLabel = (r: AppRole) =>
   r === "admin" ? "ADMIN" : r === "user" ? "Editor" : "Visitante";
 
+// Censura o e-mail: he******a@in*****.com.br
+const maskEmail = (email: string | null) => {
+  if (!email) return "—";
+  const [local, domain] = email.split("@");
+  if (!domain) return "•••";
+  const maskPart = (s: string, keep: number) =>
+    s.length <= keep ? s[0] + "•".repeat(Math.max(1, s.length - 1)) : s.slice(0, keep) + "•".repeat(Math.max(3, s.length - keep));
+  const domainParts = domain.split(".");
+  const maskedDomain = [maskPart(domainParts[0], 2), ...domainParts.slice(1)].join(".");
+  return `${maskPart(local, 2)}@${maskedDomain}`;
+};
+
+
 export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -250,7 +263,7 @@ export const UserSettings = ({ open, onClose }: UserSettingsProps) => {
                           <TableRow key={u.id}>
                             <TableCell>
                               <div className="flex flex-col">
-                                <span className="font-medium text-sm">{u.email || "—"}</span>
+                                <span className="font-medium text-sm">{maskEmail(u.email)}</span>
                                 <span className="text-xs text-muted-foreground">{u.name}</span>
                               </div>
                             </TableCell>

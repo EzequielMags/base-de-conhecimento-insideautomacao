@@ -44,6 +44,8 @@ export type Database = {
           category: Database["public"]["Enums"]["card_category"]
           cover_image: string | null
           created_at: string | null
+          delete_requested_at: string | null
+          delete_requested_by: string | null
           description: string
           files: Json | null
           id: string
@@ -58,6 +60,8 @@ export type Database = {
           category: Database["public"]["Enums"]["card_category"]
           cover_image?: string | null
           created_at?: string | null
+          delete_requested_at?: string | null
+          delete_requested_by?: string | null
           description: string
           files?: Json | null
           id?: string
@@ -72,6 +76,8 @@ export type Database = {
           category?: Database["public"]["Enums"]["card_category"]
           cover_image?: string | null
           created_at?: string | null
+          delete_requested_at?: string | null
+          delete_requested_by?: string | null
           description?: string
           files?: Json | null
           id?: string

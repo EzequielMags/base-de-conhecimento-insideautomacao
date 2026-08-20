@@ -2,14 +2,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { CardFile } from "@/types/card";
 
 export const uploadFile = async (file: File, userId: string): Promise<CardFile> => {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${userId}/${Date.now()}.${fileExt}`;
-  
+  const parts = file.name.split('.');
+  const fileExt = parts.length > 1 ? parts.pop()!.replace(/[^a-zA-Z0-9]/g, '') : 'bin';
+  const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt || 'bin'}`;
+
   const { data, error } = await supabase.storage
     .from('card-files')
     .upload(fileName, file, {
       cacheControl: '3600',
-      upsert: false
+      upsert: false,
+      contentType: file.type || 'application/octet-stream'
     });
 
   if (error) throw error;

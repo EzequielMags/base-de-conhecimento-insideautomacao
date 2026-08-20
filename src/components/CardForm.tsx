@@ -112,11 +112,11 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
         title: "Arquivos enviados!",
         description: `${uploadedFiles.length} arquivo(s) adicionado(s) com sucesso.`
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       toast({
-        title: "Erro",
-        description: "Não foi possível enviar os arquivos. Tente novamente.",
+        title: "Erro no upload",
+        description: error?.message || "Não foi possível enviar os arquivos. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -257,10 +257,11 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
       });
       
       onClose();
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Erro ao salvar card:", error);
       toast({
-        title: "Erro",
-        description: "Não foi possível salvar o card. Tente novamente.",
+        title: "Erro ao salvar",
+        description: error?.message || "Não foi possível salvar o card. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -475,7 +476,7 @@ export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => 
                   </span>
                   <input
                     type="file"
-                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.bak,.bat"
+                    accept="*/*"
                     multiple
                     onChange={handleFileUpload}
                     className="hidden"

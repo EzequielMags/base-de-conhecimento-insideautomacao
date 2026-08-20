@@ -27,7 +27,9 @@ const categories: CardCategory[] = [
   "Sat",
   "NFCE",
   "Dados Fiscais",
-  "Sistema"
+  "Sistema",
+  "Tablet",
+  "Extras"
 ];
 
 export const CardForm = ({ open, onClose, onSave, editCard }: CardFormProps) => {

@@ -88,13 +88,20 @@ export const SolutionCard = ({ card, onEdit, onDelete, onView, canEdit = true, c
       >
         <Card className={`card-hover gradient-card overflow-hidden group relative ${
           isPinned ? "ring-2 ring-blue-500 shadow-[0_0_20px_-4px_rgba(59,130,246,0.6)]" : ""
-        }`}>
+        } ${remaining !== null ? "ring-2 ring-destructive/70" : ""}`}>
           {isPinned && (
             <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-lg">
               <Pin className="h-3 w-3" />
               Fixado
             </div>
           )}
+          {remaining !== null && (
+            <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1 bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-1 rounded-full shadow-lg animate-pulse">
+              <Timer className="h-3 w-3" />
+              {formatRemaining(remaining)}
+            </div>
+          )}
+
           {/* Prioridade: 1. Capa personalizada, 2. Vídeo, 3. Primeira imagem */}
           {coverImage && !firstVideo && (
             <div 
